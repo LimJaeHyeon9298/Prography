@@ -8,8 +8,12 @@
 import SwiftUI
 
 struct HomeView: View {
+    
+    let apiKey = Bundle.main.infoDictionary?["APIKey"]
+     as! String
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        Text("\(apiKey)")
             .font(.pretendard(size: 16, family: .semibold))
             .foregroundStyle(.logo)
     }

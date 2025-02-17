@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		4645652E2D63864F0048E6C1 /* Config.xcconfig in Resources */ = {isa = PBXBuildFile; fileRef = 4645652D2D63864F0048E6C1 /* Config.xcconfig */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		4645647C2D637C3E0048E6C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -27,6 +31,7 @@
 		464564692D637C3C0048E6C1 /* Prography_assignment.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Prography_assignment.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4645647B2D637C3E0048E6C1 /* Prography_assignmentTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Prography_assignmentTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		464564852D637C3E0048E6C1 /* Prography_assignmentUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Prography_assignmentUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4645652D2D63864F0048E6C1 /* Config.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config.xcconfig; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -88,6 +93,7 @@
 		464564602D637C3C0048E6C1 = {
 			isa = PBXGroup;
 			children = (
+				4645652D2D63864F0048E6C1 /* Config.xcconfig */,
 				4645646B2D637C3C0048E6C1 /* Prography_assignment */,
 				4645647E2D637C3E0048E6C1 /* Prography_assignmentTests */,
 				464564882D637C3E0048E6C1 /* Prography_assignmentUITests */,
@@ -225,6 +231,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4645652E2D63864F0048E6C1 /* Config.xcconfig in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -284,6 +291,7 @@
 /* Begin XCBuildConfiguration section */
 		4645648D2D637C3E0048E6C1 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4645652D2D63864F0048E6C1 /* Config.xcconfig */;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
