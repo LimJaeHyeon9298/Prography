@@ -8,17 +8,24 @@
 import SwiftUI
 
 struct HomeView: View {
-    
-    let apiKey = Bundle.main.infoDictionary?["APIKey"]
-     as! String
+    @ObservedObject var coordinator: HomeCoordinator
+    @Binding var hideTabBar: Bool
     
     var body: some View {
-        Text("\(apiKey)")
-            .font(.pretendard(size: 16, family: .semibold))
-            .foregroundStyle(.logo)
+        NavigationStack(path: $coordinator.navigationPath) {
+            VStack {
+                Button("Go to Detail") {
+                    hideTabBar = true 
+                    coordinator.navigate(to: .detail)
+                }
+            }
+            .navigationDestination(for: HomeRoute.self) { route in
+                coordinator.view(for: route)
+            }
+        }
+        .onChange(of: coordinator.navigationPath.count) { count in
+                    hideTabBar = count > 0
+                }
     }
 }
 
-#Preview {
-    HomeView()
-}

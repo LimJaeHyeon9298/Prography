@@ -8,11 +8,24 @@
 import SwiftUI
 
 struct MyPageView: View {
+    @ObservedObject var coordinator: MyPageCoordinator
+    @Binding var hideTabBar: Bool
+    
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        NavigationStack(path: $coordinator.navigationPath) {
+            VStack {
+                Button("Go to Detail") {
+                    hideTabBar = true
+                    coordinator.navigate(to: .detail)
+                }
+            }
+            .navigationDestination(for: MyPageRoute.self) { route in
+                coordinator.view(for: route)
+            }
+        }
+        .onChange(of: coordinator.navigationPath.count) { count in
+                    hideTabBar = count > 0
+                }
     }
 }
 
-#Preview {
-    MyPageView()
-}
