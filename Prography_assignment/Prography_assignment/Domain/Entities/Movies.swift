@@ -11,7 +11,7 @@ struct Movies {
 
 }
 
-struct MovieDomain {
+struct MovieDomain: Equatable {
     let id: Int
     let title: String
     let overview: String
@@ -20,14 +20,14 @@ struct MovieDomain {
     let rating: Double
 }
 
-struct MovieListDomain {
+struct MovieListDomain: Equatable {
     let movies: [MovieDomain]
     let currentPage: Int
     let totalPages: Int
     let availableDateRange: DateRange
 }
 
-struct DateRange {
+struct DateRange: Equatable {
     let from: Date
     let to: Date
 }
