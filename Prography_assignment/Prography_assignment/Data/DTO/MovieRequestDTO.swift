@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct MovieRequestDTO {
-
+    let page: Int32
+    let language: String
+    let region: String?
 }
+
 

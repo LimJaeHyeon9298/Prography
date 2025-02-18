@@ -17,3 +17,12 @@ extension Font {
         return Font.custom("Pretendard-\(family)", size: size)
     }
 }
+
+// MARK: - Date Formatter
+extension DateFormatter {
+    static let movieDate: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter
+    }()
+}
