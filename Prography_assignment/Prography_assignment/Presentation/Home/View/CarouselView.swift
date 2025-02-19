@@ -35,3 +35,40 @@ struct CarouselView: View {
 }
 
 
+
+struct Movie: Identifiable {
+    let id: Int
+    let title: String
+    let overview: String
+    let rating: Double
+}
+
+struct MockData {
+    static let popularMovies = [
+        Movie(id: 1, title: "인기영화 1", overview: "인기영화 1에 대한 설명입니다.", rating: 8.5),
+        Movie(id: 2, title: "인기영화 2", overview: "인기영화 2에 대한 설명입니다.", rating: 9.0),
+        Movie(id: 3, title: "인기영화 3", overview: "인기영화 3에 대한 설명입니다.", rating: 7.8)
+    ]
+    
+    static let newMovies = [
+        Movie(id: 4, title: "최신영화 1", overview: "최신영화 1에 대한 설명입니다.", rating: 8.1),
+        Movie(id: 5, title: "최신영화 2", overview: "최신영화 2에 대한 설명입니다.", rating: 7.5),
+        Movie(id: 6, title: "최신영화 3", overview: "최신영화 3에 대한 설명입니다.", rating: 8.9),
+        Movie(id: 7, title: "최신영화 4", overview: "최신영화 4에 대한 설명입니다.", rating: 7.2)
+    ]
+    
+    static let recommendedMovies = [
+        Movie(id: 8, title: "추천영화 1", overview: "추천영화 1에 대한 설명입니다.", rating: 9.2),
+        Movie(id: 9, title: "추천영화 2", overview: "추천영화 2에 대한 설명입니다.", rating: 8.7),
+        Movie(id: 10, title: "추천영화 3", overview: "추천영화 3에 대한 설명입니다.", rating: 8.4),
+        Movie(id: 11, title: "추천영화 4", overview: "추천영화 4에 대한 설명입니다.", rating: 7.9),
+        Movie(id: 12, title: "추천영화 5", overview: "추천영화 5에 대한 설명입니다.", rating: 8.2),
+        Movie(id: 13, title: "추천영화 4", overview: "추천영화 4에 대한 설명입니다.", rating: 7.9),
+        Movie(id: 14, title: "추천영화 4", overview: "추천영화 4에 대한 설명입니다.", rating: 7.9),
+        Movie(id: 15, title: "추천영화 4", overview: "추천영화 4에 대한 설명입니다.", rating: 7.9),
+        Movie(id: 16, title: "추천영화 4", overview: "추천영화 4에 대한 설명입니다.", rating: 7.9),
+        Movie(id: 17, title: "추천영화 4", overview: "추천영화 4에 대한 설명입니다.", rating: 7.9),
+        Movie(id: 18, title: "추천영화 4", overview: "추천영화 4에 대한 설명입니다.", rating: 7.9)
+    ]
+}
+
