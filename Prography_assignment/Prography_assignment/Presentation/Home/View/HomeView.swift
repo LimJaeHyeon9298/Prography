@@ -21,8 +21,10 @@ struct HomeView: View {
             let accessToken = Bundle.main.infoDictionary?["AccessToken"] as! String
             let networkService = NetworkService()
             let repository = MovieRepository(networkService: networkService, accessToken: accessToken )
+            let repository2 = PopularMovieRepository(networkService: networkService, accessToken: accessToken )
             let useCase = FetchNowPlayingMoviesUseCase(repository: repository)
-            self._viewModel = StateObject(wrappedValue: HomeViewModel(useCase: useCase))
+            let useCase2 = PopularMovieUseCase(repository: repository2)
+            self._viewModel = StateObject(wrappedValue: HomeViewModel(nowPlayingUseCase: useCase, popularUseCase: useCase2))
         }
     
     
@@ -37,13 +39,15 @@ struct HomeView: View {
             .navigationDestination(for: HomeRoute.self) { route in
                 coordinator.view(for: route)
             }
+            
             .onAppear {
-                viewModel.fetchNowPlaying()
+                print("HomeView appeared")
+                viewModel.fetchInitialData()
             }
-            .onChange(of: viewModel.isLoading) { isLoading in
-                print("로딩 상태 변경:", isLoading)
-            }
-            .onChange(of: viewModel.movies) { movies in
+//            .onChange(of: viewModel.isLoading) { isLoading in
+//                print("로딩 상태 변경:", isLoading)
+//            }
+            .onChange(of: viewModel.nowPlayingMovies) { movies in
                             if let movies = movies {
                                 print("영화 데이터 받아옴:")
                                 print("- 현재 페이지:", movies.currentPage)
@@ -58,6 +62,21 @@ struct HomeView: View {
                                 }
                             }
                         }
+            
+            .onChange(of: viewModel.popularMovies) { movies in
+               if let movies = movies {
+                   print("인기 영화 데이터 받아옴:")
+                   print("- 현재 페이지:", movies.currentPage)
+                   print("- 전체 페이지:", movies.totalPages)
+                   print("- 영화 개수:", movies.movies.count)
+                   if let firstMovie = movies.movies.first {
+                       print("첫 번째 영화:")
+                       print("- 제목:", firstMovie.title)
+                       print("- 개봉일:", firstMovie.releaseDate)
+                       print("- overview:", firstMovie.overview)
+                   }
+               }
+            }
             
         }
         .onChange(of: coordinator.navigationPath.count) { count in

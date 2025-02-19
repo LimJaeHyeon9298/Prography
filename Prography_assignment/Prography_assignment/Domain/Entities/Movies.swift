@@ -32,3 +32,9 @@ struct DateRange: Equatable {
     let to: Date
 }
 
+
+struct PopularMovieListDomain: Equatable {
+    let movies: [MovieDomain]
+    let currentPage: Int
+    let totalPages: Int
+}

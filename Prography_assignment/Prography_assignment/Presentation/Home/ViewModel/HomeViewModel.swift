@@ -11,54 +11,108 @@ import Combine
 
 class HomeViewModel: ObservableObject {
 
-    @Published private(set) var movies: MovieListDomain?
-    @Published private(set) var isLoading = false
-    @Published private(set) var error: NetworkError?
+    @Published private(set) var nowPlayingMovies: MovieListDomain?
+    @Published private(set) var isLoadingNowPlaying = false
+    @Published private(set) var isLoadingPopular = false
+    @Published private(set) var nowPlayingError: NetworkError?
+    @Published private(set) var popularError: NetworkError?
+    @Published private(set) var popularMovies: PopularMovieListDomain?
     
-    private let useCase: FetchNowPlayingMoviesUseCase
+    private let nowPlayingUseCase: FetchNowPlayingMoviesUseCase
+    private let popularUseCase: PopularMovieUseCase
     private var cancellables = Set<AnyCancellable>()
-    private var currentPage = 1
+    private var nowPlayingCurrentPage = 1
+    private var popularCurrentPage = 1
     
 
-    init(useCase: FetchNowPlayingMoviesUseCase) {
-        self.useCase = useCase
+    init(nowPlayingUseCase: FetchNowPlayingMoviesUseCase,
+         popularUseCase: PopularMovieUseCase) {
+        self.nowPlayingUseCase = nowPlayingUseCase
+        self.popularUseCase = popularUseCase
     }
     
     
     func fetchNowPlaying() {
-        isLoading = true
-        error = nil
+        print("fetchNowPlaying 시작")
+        isLoadingNowPlaying = true
+        nowPlayingError = nil
         
-        useCase.execute(page: currentPage)
+        nowPlayingUseCase.execute(page: nowPlayingCurrentPage)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
-                self?.isLoading = false
+                self?.isLoadingNowPlaying = false
                 switch completion {
                 case .failure(let error):
-                    self?.error = error
+                    self?.nowPlayingError = error
                 case .finished:
                     break
                 }
             } receiveValue: { [weak self] movieList in
-                self?.movies = movieList
-                self?.currentPage += 1
+                self?.nowPlayingMovies = movieList
+                self?.nowPlayingCurrentPage += 1
             }
             .store(in: &cancellables)
     }
     
-    func loadMoreIfNeeded(currentItem movie: MovieDomain) {
-        guard let movies = movies,
-              !isLoading,
-              currentPage <= movies.totalPages,
-              movies.movies.last?.id == movie.id else {
-            return
-        }
-        
+    func fetchPopular() {
+        print("fetchPopular 시작")
+         isLoadingPopular = true
+         popularError = nil
+         
+         popularUseCase.execute(page: popularCurrentPage)
+             .receive(on: DispatchQueue.main)
+             .sink { [weak self] completion in
+                 print("popular completion: \(completion)")
+                 self?.isLoadingPopular = false
+                 switch completion {
+                 case .failure(let error):
+                     self?.popularError = error
+                     print("popular error: \(error)")
+                 case .finished:
+                     break
+                 }
+             } receiveValue: { [weak self] movieList in
+                 print("popular 데이터 받음")
+                 self?.popularMovies = movieList
+                 self?.popularCurrentPage += 1
+             }
+             .store(in: &cancellables)
+     }
+    
+    func loadMoreNowPlayingIfNeeded(currentItem movie: MovieDomain) {
+           guard let movies = nowPlayingMovies,
+                 !isLoadingNowPlaying,
+                 nowPlayingCurrentPage <= movies.totalPages,
+                 movies.movies.last?.id == movie.id else {
+               return
+           }
+           
+           fetchNowPlaying()
+       }
+       
+    func loadMorePopularIfNeeded(currentItem movie: MovieDomain) {
+           guard let movies = popularMovies,
+                 !isLoadingPopular,
+                 popularCurrentPage <= movies.totalPages,
+                 movies.movies.last?.id == movie.id else {
+               return
+           }
+           
+           fetchPopular()
+       }
+    
+    func retryNowPlaying() {
         fetchNowPlaying()
     }
+        
+    func retryPopular() {
+        fetchPopular()
+    }
     
-    func retry() {
+    func fetchInitialData() {
+        print("fetchInitialData 호출됨")
         fetchNowPlaying()
+        fetchPopular()
     }
 }
 

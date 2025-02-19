@@ -37,3 +37,17 @@ struct MovieMapper {
             )
         }
 }
+
+extension MovieMapper {
+    static func toDomain(dto: PopularMovieResponseDTO) -> PopularMovieListDomain? {
+        guard let movies = dto.results.compactMap(toDomain) as [MovieDomain]? else {
+            return nil
+        }
+        
+        return PopularMovieListDomain(
+            movies: movies,
+            currentPage: dto.page,
+            totalPages: dto.totalPages
+        )
+    }
+}

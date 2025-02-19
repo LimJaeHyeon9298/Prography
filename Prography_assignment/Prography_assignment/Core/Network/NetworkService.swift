@@ -33,6 +33,10 @@ struct NetworkService: NetworkServiceProtocol {
             var request = URLRequest(url: url)
             request.addValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
             request.addValue("application/json", forHTTPHeaderField: "accept")
+        
+        print("Request URL:", url)
+        print("Request Headers:", request.allHTTPHeaderFields)
+            print("Authorization Token:", "Bearer \(accessToken)")
             
             return session.dataTaskPublisher(for: request)
                 .mapError { NetworkError.networkError($0) }
