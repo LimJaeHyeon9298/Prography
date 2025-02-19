@@ -14,6 +14,16 @@ struct HomeView: View {
     var body: some View {
         NavigationStack(path: $coordinator.navigationPath) {
             VStack {
+                
+                CarouselView()
+                    .padding(.top, -40)
+                
+                Spacer()
+                
+                MovieSectionsTabView()
+                    .padding(.top, -10)
+                
+                
                 Button("Go to Detail") {
                     hideTabBar = true 
                     coordinator.navigate(to: .detail)
