@@ -27,7 +27,7 @@ struct Prography_assignmentApp: App {
 
     var body: some Scene {
         WindowGroup {
-            DetailView()
+            MainTabView()
         }
 //        .modelContainer(sharedModelContainer)
     }
