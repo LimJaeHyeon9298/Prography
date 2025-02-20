@@ -6,40 +6,182 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct DetailView: View {
     let movie: MovieDomain
     @State var text: String = ""
+    @Environment(\.modelContext) private var modelContext
+    @Query private var reviews: [MovieReview]
+    @State private var isEditMode = false
+    @State private var textEditorHeight: CGFloat = 34
+    @State private var maxEditorHeight: CGFloat = 170
+    @State private var keyboardHeight: CGFloat = 0
+    @State private var isEditing = false
+    @State private var userRating: Int = 0
     
     var body: some View {
-        VStack(spacing: 0) {
-            // 포스터 이미지 영역
-            PosterImageView(posterURL: movie.posterURL)
-                    .frame(height: UIScreen.main.bounds.height * 0.35)
-            // 별점 영역
-            RatingSection(rating: movie.rating)
-                .padding(.top, 16)
-            
-            // 스크롤 영역
-            DetailContent(movie: movie, text: $text)
+        ScrollView {
+            ZStack {
+                VStack(spacing: 0) {
+                    // 포스터 이미지 영역
+                    PosterImageView(posterURL: movie.posterURL)
+                        .frame(height: UIScreen.main.bounds.height * 0.35)
+                    
+                    // 별점 영역
+                    RatingSection(userRating: $userRating)
+                        .padding(.top, 16)
+                    
+                    // 컨텐츠 영역
+                    VStack(alignment: .leading, spacing: 24) {
+                        // 제목 영역
+                        MovieTitleSection(movie: movie)
+                        
+                        // 장르 영역
+                        GenreSection(genreIds: movie.genreIds)
+                        
+                        // 줄거리 영역
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("줄거리")
+                                .font(.pretendard(size: 18, family: .bold))
+                            
+                            Text(movie.overview)
+                                .font(.pretendard(size: 16, family: .regular))
+                                .lineSpacing(4)
+                                .foregroundColor(.black.opacity(0.8))
+                        }
+                        
+                        // 코멘트 영역
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Comment")
+                                .font(.pretendard(size: 18, family: .bold))
+                                .foregroundStyle(.black)
+                            
+                            HStack(spacing: 10) {
+                                ZStack {
+                                 RoundedRectangle(cornerRadius: 16)
+                                   // Capsule()
+                                        .strokeBorder(Color.secondary, lineWidth: 1)
+                                        .background(Color.white)
+                                        .frame(height: max(50, textEditorHeight))
+
+                                    HStack {
+                                        DynamicHeightTextEditor(text: $text, height: $textEditorHeight, maxEditorHeight: maxEditorHeight)
+                                            .frame(height: min(textEditorHeight, maxEditorHeight))
+                                            .background(.yellow)
+                                            .padding(.vertical, 8)
+
+                                        Spacer()
+
+                                        Button(action: {
+                                           hideKeyboard()
+                                            addComment()
+                                        }) {
+                                            Image(systemName: "paperplane.fill")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: 24, height: 24)
+                                        }
+                                        .disabled(text.isEmpty || userRating == 0)
+                                    }
+                                    .padding(.horizontal, 12)
+                                }
+                                .padding(.bottom, 8)
+                            }
+                            .padding(.horizontal)
+                            .padding(.bottom, 8)
+
+                        }
+                        .padding(.bottom , 8)
+                        
+                        Spacer(minLength: 32)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.top, 24)
+                }
+                
+                if isEditing {
+                    VStack {
+                        Color.clear
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                hideKeyboard()
+                            }
+                        Spacer()
+                            .frame(height: textEditorHeight + 16)
+                    }
+                }
+            }
+           
+            .onAppear {
+                setupKeyboardObservers()
+            }
+            .onDisappear {
+                removeKeyboardObservers()
+            }
         }
         .background(Color.white)
         .toolbar(.hidden, for: .navigationBar)
     }
+    
+    private func addComment() {
+           do {
+               try DataManager.shared.saveReview(
+                   movieId: movie.id,
+                   rating: userRating,
+                   comment: text
+               )
+               text = ""
+               userRating = 0
+           } catch {
+               print("Error saving review: \(error)")
+           }
+       }
+    
+    private func hideKeyboard() {
+        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        isEditing = false
+    }
+
+    private func setupKeyboardObservers() {
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { notification in
+            if let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect {
+                keyboardHeight = keyboardFrame.height
+                isEditing = true
+            }
+        }
+
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) {
+            _ in keyboardHeight = 0
+            isEditing = false
+        }
+    }
+
+    private func removeKeyboardObservers() {
+        NotificationCenter.default.removeObserver(self)
+    }
 }
-
-
 
 // 별점 섹션
 private struct RatingSection: View {
-    let rating: Double
+    @Binding var userRating: Int
+    
     
     var body: some View {
         HStack(spacing: 8) {
-            ForEach(0..<5) { index in
+            ForEach(1...5, id: \.self) { index in
                 Image(systemName: "star.fill")
-                    .foregroundColor(index < Int(rating / 2) ? .yellow : .gray)
+                    .foregroundColor(index <= userRating ? .red : .gray)
                     .font(.system(size: 36))
+                    .onTapGesture {
+                        withAnimation(.easeInOut(duration: 0.2)) {
+                            if userRating == index {
+                                userRating = 0
+                            } else {
+                                userRating = index
+                            }
+                        }
+                    }
             }
         }
     }
@@ -195,47 +337,7 @@ struct PosterImageView: View {
             .foregroundColor(.gray)
     }
 }
-struct CustomTextView: UIViewRepresentable {
-    @Binding var text: String
-    @FocusState var isFocused: Bool
-    
-    func makeUIView(context: Context) -> UITextView {
-        let textView = UITextView()
-        textView.delegate = context.coordinator
-        textView.font = .systemFont(ofSize: 16)
-        textView.textColor = .white
-        textView.backgroundColor = .clear
-        return textView
-    }
-    
-    func updateUIView(_ uiView: UITextView, context: Context) {
-        uiView.text = text
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, UITextViewDelegate {
-        var parent: CustomTextView
-        
-        init(_ textView: CustomTextView) {
-            self.parent = textView
-        }
-        
-        func textViewDidChange(_ textView: UITextView) {
-            parent.text = textView.text
-        }
-        
-        func textViewDidBeginEditing(_ textView: UITextView) {
-            parent.isFocused = true
-        }
-                
-        func textViewDidEndEditing(_ textView: UITextView) {
-            parent.isFocused = false
-        }
-    }
-}
+
 
 extension View {
     func placeholder<Content: View>(
@@ -249,3 +351,61 @@ extension View {
         }
     }}
 
+
+struct DynamicHeightTextEditor: UIViewRepresentable {
+    @Binding var text: String
+    @Binding var height: CGFloat
+    var maxEditorHeight: CGFloat
+
+    func makeUIView(context: Context) -> UITextView {
+        let textView = UITextView()
+        textView.isScrollEnabled = false
+        textView.font = UIFont.systemFont(ofSize: 17)
+        textView.backgroundColor = .clear
+        textView.delegate = context.coordinator
+        textView.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        textView.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        
+        textView.inputAssistantItem.leadingBarButtonGroups = []
+                textView.inputAssistantItem.trailingBarButtonGroups = []
+                textView.autocorrectionType = .no
+                textView.autocapitalizationType = .none
+                textView.spellCheckingType = .no
+                textView.smartQuotesType = .no
+                textView.smartDashesType = .no
+        
+        
+        
+        return textView
+    }
+
+    func updateUIView(_ uiView: UITextView, context: Context) {
+        uiView.text = text
+        DynamicHeightTextEditor.recalculateHeight(view: uiView, result: $height, maxEditorHeight: maxEditorHeight)
+        uiView.isScrollEnabled = height >= maxEditorHeight
+    }
+
+    static func recalculateHeight(view: UIView, result: Binding<CGFloat>, maxEditorHeight: CGFloat) {
+        let size = view.sizeThatFits(CGSize(width: view.frame.size.width, height: CGFloat.greatestFiniteMagnitude))
+        DispatchQueue.main.async {
+            result.wrappedValue = min(size.height, maxEditorHeight)
+        }
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(parent: self)
+    }
+
+    class Coordinator: NSObject, UITextViewDelegate {
+        var parent: DynamicHeightTextEditor
+
+        init(parent: DynamicHeightTextEditor) {
+            self.parent = parent
+        }
+
+        func textViewDidChange(_ textView: UITextView) {
+            parent.text = textView.text
+            DynamicHeightTextEditor.recalculateHeight(view: textView, result: parent.$height, maxEditorHeight: parent.maxEditorHeight)
+        }
+    }
+}

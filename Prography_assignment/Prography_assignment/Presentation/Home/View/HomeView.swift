@@ -8,6 +8,7 @@
 import SwiftUI
 //
 struct HomeView: View {
+    @State private var reviews: [MovieReview] = []
     @ObservedObject var coordinator: HomeCoordinator
     @Binding var hideTabBar: Bool
     @State private var selectedTab = 0
@@ -61,7 +62,7 @@ struct HomeView: View {
                 print("HomeView appeared")
                 viewModel.fetchInitialData()
                 viewModel.setupNavigationSubscription(coordinator: coordinator)
-               
+                loadReviews()
 
             }
             .onChange(of: viewModel.nowPlayingMovies) { movies in
@@ -127,5 +128,14 @@ struct HomeView: View {
                     hideTabBar = count > 0
         }
     }
+    
+    private func loadReviews() {
+          do {
+              reviews = try DataManager.shared.fetchReviews(for: 939243)
+              
+          } catch {
+              print("Error fetching reviews: \(error)")
+          }
+      }
 }
 
