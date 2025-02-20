@@ -11,7 +11,7 @@ struct Movies {
 
 }
 
-struct MovieDomain: Equatable {
+struct MovieDomain: Equatable,Hashable {
     let id: Int
     let title: String
     let overview: String

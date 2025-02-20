@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+//
 struct HomeView: View {
     @ObservedObject var coordinator: HomeCoordinator
     @Binding var hideTabBar: Bool
@@ -31,13 +31,13 @@ struct HomeView: View {
             self._viewModel = StateObject(wrappedValue: HomeViewModel(nowPlayingUseCase: useCase, popularUseCase: useCase2, topRatedUseCase: useCase3))
         }
     
-    
+
     var body: some View {
         NavigationStack(path: $coordinator.navigationPath) {
             ScrollView {
                 LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
                     
-                    CarouselView()
+                    CarouselView(viewModel: viewModel)
                         .padding(.top, 10)
                         .frame(height: 200)
                     
@@ -52,24 +52,18 @@ struct HomeView: View {
 
                     }
                     .padding(.top,20)
-
-                    
-
                 }
             }
-            
-           
             .navigationDestination(for: HomeRoute.self) { route in
                 coordinator.view(for: route)
             }
-            
             .onAppear {
                 print("HomeView appeared")
                 viewModel.fetchInitialData()
+                viewModel.setupNavigationSubscription(coordinator: coordinator)
+               
+
             }
-//            .onChange(of: viewModel.isLoading) { isLoading in
-//                print("로딩 상태 변경:", isLoading)
-//            }
             .onChange(of: viewModel.nowPlayingMovies) { movies in
                             if let movies = movies {
                                 print("영화 데이터 받아옴:")
@@ -128,29 +122,10 @@ struct HomeView: View {
                     print("\n====== End of Top Rated Movies ======")
                 }
             }
-            
-//            .onChange(of: viewModel.topRatedMovies) { movies in
-//               if let movies = movies {
-//                   
-//                   print("인기 영화 데이터 받아옴:")
-//                   print("- 현재 페이지:", movies.currentPage)
-//                   print("- 전체 페이지:", movies.totalPages)
-//                   print("- 영화 개수:", movies.movies.count)
-//                   if let firstMovie = movies.movies.first {
-//                       print("첫 번째 영화:")
-//                       print("- 제목:", firstMovie.title)
-//                       print("- 개봉일:", firstMovie.releaseDate)
-//                       print("- overview:", firstMovie.overview)
-//                   }
-//               }
-//            }
-            
         }
         .onChange(of: coordinator.navigationPath.count) { count in
                     hideTabBar = count > 0
-                }
-        
-
+        }
     }
 }
 

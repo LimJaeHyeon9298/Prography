@@ -14,7 +14,7 @@ class HomeCoordinator: CoordinatorProtocol {
     
     func navigate(to route: HomeRoute) {
         switch route {
-        case .detail:
+        case .detail(let movie):
             navigationPath.append(route)
         case .search:
             navigationPath.append(route)
@@ -26,12 +26,12 @@ class HomeCoordinator: CoordinatorProtocol {
     @ViewBuilder
     func view(for route: HomeRoute) -> some View {
         switch route {
-        case .detail:
-            DetailView()
+        case .detail(let movie):
+            DetailView(movie: movie)
         case .search:
-            DetailView()
+            EmptyView()
         case .filter:
-            DetailView()
+            EmptyView()
         }
     }
 }

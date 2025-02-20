@@ -27,11 +27,11 @@ class MyPageCoordinator: CoordinatorProtocol {
     func view(for route:MyPageRoute) -> some View {
         switch route {
         case .detail:
-            DetailView()
+            EmptyView()
         case .settings:
-            DetailView()
+            EmptyView()
         case .profile:
-            DetailView()
+            EmptyView()
         }
     }
     

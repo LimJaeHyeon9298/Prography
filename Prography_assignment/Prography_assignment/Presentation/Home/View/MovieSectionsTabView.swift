@@ -110,14 +110,14 @@ struct MovieSectionView: View {
             }
             .padding(.vertical)
             .padding(.bottom, 60)
-      }
-        .scrollDisabled(false)  // 스크롤 활성화 유지
-                .simultaneousGesture(DragGesture().onChanged { value in
-                    // 스크롤이 최상단에 도달했을 때 상위 ScrollView로 전달
-                    if value.translation.height > 0 {  // 아래로 스크롤
-                        // 상위 스크롤 활성화
-                    }
-                })
+     }
+//        .scrollDisabled(false)  // 스크롤 활성화 유지
+//                .simultaneousGesture(DragGesture().onChanged { value in
+//                    // 스크롤이 최상단에 도달했을 때 상위 ScrollView로 전달
+//                    if value.translation.height > 0 {  // 아래로 스크롤
+//                        // 상위 스크롤 활성화
+//                    }
+//                })
             }
         }
 
