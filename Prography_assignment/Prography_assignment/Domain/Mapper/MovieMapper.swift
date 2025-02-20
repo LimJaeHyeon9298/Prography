@@ -16,7 +16,8 @@ struct MovieMapper {
                            overview: dto.overview,
                            posterURL: dto.posterPath.flatMap {URL(string: "https://image.tmdb.org/t/p/w500/\($0)")},
                            releaseDate: releaseDate,
-                           rating: dto.voteAverage)
+                           rating: dto.voteAverage,
+                           genreIds: dto.genreIds )
         
     }
     
