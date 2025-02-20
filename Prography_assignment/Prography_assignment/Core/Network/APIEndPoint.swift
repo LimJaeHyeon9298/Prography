@@ -10,6 +10,7 @@ import SwiftUI
 enum APIEndPoint{
     case nowPlaying(page:Int, language:String,region:String?)
     case popular(page:Int, language:String,region:String?)
+    case topRated(page:Int, language:String,region:String?)
     
     var baseURL: String {
         return "https://api.themoviedb.org/3"
@@ -21,13 +22,16 @@ enum APIEndPoint{
             return "/movie/now_playing"
         case .popular:
             return "/movie/popular"
+        case .topRated:
+            return "/movie/top_rated"
         }
     }
     
     var queryItems: [URLQueryItem] {
             switch self {
             case .nowPlaying(let page, let language, let region),
-                 .popular(let page, let language, let region):
+                 .popular(let page, let language, let region),
+                 .topRated(let page, let language, let region):
                 var items = [
                     URLQueryItem(name: "page", value: "\(page)"),
                     URLQueryItem(name: "language", value: language)

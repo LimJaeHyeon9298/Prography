@@ -16,19 +16,25 @@ class HomeViewModel: ObservableObject {
     @Published private(set) var isLoadingPopular = false
     @Published private(set) var nowPlayingError: NetworkError?
     @Published private(set) var popularError: NetworkError?
+    @Published private(set) var topRatedError: NetworkError?
     @Published private(set) var popularMovies: PopularMovieListDomain?
+    @Published private(set) var topRatedMovies: TopRatedMovieListDomain?
     
     private let nowPlayingUseCase: FetchNowPlayingMoviesUseCase
     private let popularUseCase: PopularMovieUseCase
+    private let topRatedUseCase: TopRatedMovieUseCase
     private var cancellables = Set<AnyCancellable>()
     private var nowPlayingCurrentPage = 1
     private var popularCurrentPage = 1
+    private var topRatedCurrentPage = 1
     
 
     init(nowPlayingUseCase: FetchNowPlayingMoviesUseCase,
-         popularUseCase: PopularMovieUseCase) {
+         popularUseCase: PopularMovieUseCase,
+         topRatedUseCase: TopRatedMovieUseCase) {
         self.nowPlayingUseCase = nowPlayingUseCase
         self.popularUseCase = popularUseCase
+        self.topRatedUseCase = topRatedUseCase
     }
     
     
@@ -79,6 +85,28 @@ class HomeViewModel: ObservableObject {
              .store(in: &cancellables)
      }
     
+    func fetchTopRated() {
+        topRatedUseCase.execute(page:topRatedCurrentPage)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                switch completion {
+                    
+                case .failure(let error):
+                    self?.topRatedError = error
+                    print("topRated error: \(error)")
+                case .finished:
+                    break
+                
+                }
+            } receiveValue: { [weak self] movieList in
+                self?.topRatedMovies = movieList
+                self?.topRatedCurrentPage += 1
+            }
+            .store(in: &cancellables)
+
+    }
+     
+    
     func loadMoreNowPlayingIfNeeded(currentItem movie: MovieDomain) {
            guard let movies = nowPlayingMovies,
                  !isLoadingNowPlaying,
@@ -113,6 +141,7 @@ class HomeViewModel: ObservableObject {
         print("fetchInitialData 호출됨")
         fetchNowPlaying()
         fetchPopular()
+        fetchTopRated()
     }
 }
 

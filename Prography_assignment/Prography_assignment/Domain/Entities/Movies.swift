@@ -38,3 +38,27 @@ struct PopularMovieListDomain: Equatable {
     let currentPage: Int
     let totalPages: Int
 }
+
+struct TopRatedMovieListDomain: Equatable {
+    let page: Int
+    let movies: [TopRatedMovieDomain]
+    let totalPages: Int
+    let totalResults: Int
+}
+
+struct TopRatedMovieDomain: Equatable {
+    let id: Int
+    let title: String
+    let originalTitle: String
+    let overview: String
+    let posterPath: String?
+    let backdropPath: String?
+    let releaseDate: String
+    let voteAverage: Double
+    let voteCount: Int
+    let popularity: Double
+    let genreIds: [Int]
+    let originalLanguage: String
+    let adult: Bool
+    let video: Bool
+}

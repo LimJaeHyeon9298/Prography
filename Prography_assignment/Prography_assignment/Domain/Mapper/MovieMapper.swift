@@ -51,3 +51,37 @@ extension MovieMapper {
         )
     }
 }
+
+extension MovieMapper {
+    static func toDomain(dto: TopRatedMovieDTO) -> TopRatedMovieDomain? {
+        return TopRatedMovieDomain(
+            id: dto.id,
+            title: dto.title,
+            originalTitle: dto.originalTitle,
+            overview: dto.overview,
+            posterPath: dto.posterPath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500/\($0)") }?.absoluteString,
+            backdropPath: dto.backdropPath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500/\($0)") }?.absoluteString,
+            releaseDate: dto.releaseDate,
+            voteAverage: dto.voteAverage,
+            voteCount: dto.voteCount,
+            popularity: dto.popularity,
+            genreIds: dto.genreIds,
+            originalLanguage: dto.originalLanguage,
+            adult: dto.adult,
+            video: dto.video
+        )
+    }
+    
+    static func toDomain(dto: TopRatedMovieResponseDTO) -> TopRatedMovieListDomain? {
+        guard let movies = dto.results.compactMap(toDomain) as [TopRatedMovieDomain]? else {
+            return nil
+        }
+        
+        return TopRatedMovieListDomain(
+            page: dto.page,
+            movies: movies,
+            totalPages: dto.totalPages,
+            totalResults: dto.totalResults
+        )
+    }
+}
