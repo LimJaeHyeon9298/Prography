@@ -17,26 +17,33 @@ struct MainTabView: View {
     }
     
     var body: some View {
-        ZStack(alignment: .bottom) {
-            switch selectedTab {
-            case .home:
-                HomeView(coordinator: coordinator.homeCoordinator, hideTabBar: $hideTabBar)
-                    .ignoresSafeArea()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            case .myPage:
-                MyPageView(coordinator: coordinator.myPageCoordinator, hideTabBar: $hideTabBar)
-                    .ignoresSafeArea()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-            }
+        VStack(spacing: 0) {
             
-            if !hideTabBar {
-                CustomTabBar(selectedTab: $selectedTab)
-                    .background(.red)
-                    .ignoresSafeArea(.keyboard)
-                    .safeAreaInset(edge: .bottom) {Color.clear.frame(height: 0)}
-            }
+            CustomNavigationBar()
+                
             
+            ZStack(alignment: .bottom) {
+                switch selectedTab {
+                case .home:
+                    HomeView(coordinator: coordinator.homeCoordinator, hideTabBar: $hideTabBar)
+                        .ignoresSafeArea()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                case .myPage:
+                    MyPageView(coordinator: coordinator.myPageCoordinator, hideTabBar: $hideTabBar)
+                        .ignoresSafeArea()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                
+                if !hideTabBar {
+                    CustomTabBar(selectedTab: $selectedTab)
+                        .background(.red)
+                        .ignoresSafeArea(.keyboard)
+                        .safeAreaInset(edge: .bottom) {Color.clear.frame(height: 0)}
+                }
+                
 
+            }
         }
+       
     }
 }
