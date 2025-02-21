@@ -22,9 +22,7 @@ import Combine
         init(repository: MovieRepository) {
             self.repository = repository
         }
-        
-    //    private let repository: MovieRepositoryImplement
-    //    
+
         func execute(page: Int, type: MovieListType) -> AnyPublisher<MovieListDomain, NetworkError> {
             switch type {
             case .nowPlaying:
@@ -32,11 +30,11 @@ import Combine
                     .mapError { $0 as NetworkError }
                     .eraseToAnyPublisher()
             case .popular:
-                return repository.fetchNowPlaying(page: page)
+                return repository.fetchPopular(page: page)
                     .mapError { $0 as NetworkError }
                     .eraseToAnyPublisher()
             case .topRated:
-                return repository.fetchNowPlaying(page: page)
+                return repository.fetchTopRated(page: page)
                     .mapError { $0 as NetworkError }
                     .eraseToAnyPublisher()
             }

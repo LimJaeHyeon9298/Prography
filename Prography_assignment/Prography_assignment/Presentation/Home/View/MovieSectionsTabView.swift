@@ -7,18 +7,6 @@
 
 import SwiftUI
 
-//struct MovieSectionsTabView: View {
-//    @State private var selectedTab = 0
-//    private let tabs = ["인기 영화", "최신 개봉작", "추천 영화"]
-//    
-//    var body: some View {
-//        VStack(spacing: 0) {
-//            MovieSectionsHeader(selectedTab: $selectedTab, tabs: tabs)
-//            MovieSectionsContent(selectedTab: $selectedTab, tabs: tabs)
-//        }
-//    }
-//}
-
 struct MovieSectionsHeader: View {
     @Binding var selectedTab: Int
     let tabs: [String]
@@ -61,108 +49,99 @@ struct MovieSectionsContent: View {
     let tabs: [String]
     @ObservedObject var viewModel: HomeViewModel
     
+    var moviesForCurrentTab: [MovieDomain] {
+        switch selectedTab {
+        case 0:
+            return viewModel.nowPlayingMovies?.movies ?? []
+        case 1:
+            return viewModel.popularMovies?.movies ?? []
+        case 2:
+            return viewModel.topRatedMovies?.movies ?? []
+        default:
+            return []
+        }
+    }
+    
     var body: some View {
         TabView(selection: $selectedTab) {
-            MovieGridView(movies: viewModel.nowPlayingMovies?.movies ?? [])
-                .tag(0)
-            
-            MovieGridView(movies: viewModel.popularMovies?.movies ?? [])
-                .tag(1)
-            
-            MovieGridView(movies: viewModel.topRatedMovies?.movies ?? [])
-                .tag(2)
+            ForEach(0..<tabs.count, id: \.self) { index in
+                MovieSectionView(
+                    movies: moviesForCurrentTab,
+                    viewModel: viewModel
+                )
+                .tag(index)
+            }
         }
         .tabViewStyle(.page(indexDisplayMode: .never))
     }
 }
 
-struct MovieGridView: View {
+struct MovieSectionView: View {
     let movies: [MovieDomain]
+    @ObservedObject var viewModel: HomeViewModel
     
     var body: some View {
-        ScrollView {
-            LazyVGrid(columns: [
-                GridItem(.flexible()),
-                GridItem(.flexible())
-            ], spacing: 16) {
+        ScrollView(.vertical, showsIndicators: false) {
+            LazyVStack(spacing: 16) {
                 ForEach(movies, id: \.id) { movie in
-                    MovieItemView(movie: movie)
+                    MovieRowView(movie: movie, viewModel: viewModel)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal)
                 }
             }
-            .padding()
+            .padding(.vertical)
+            .padding(.bottom, 60)
         }
     }
 }
 
-
-
-
-//
-//struct MovieSectionView: View {
-//    let movies: [Movie]
-//    
-//    func moviesFor(index: Int) -> [Movie] {
-//        switch index {
-//        case 0: return MockData.popularMovies
-//        case 1: return MockData.newMovies
-//        case 2: return MockData.recommendedMovies
-//        default: return []
-//        }
-//    }
-//    
-//    var body: some View {
-//        ScrollView(.vertical, showsIndicators: false) {
-//            LazyVStack(spacing: 16) {
-//                ForEach(movies) { movie in
-//                    MovieItemView(movie: movie)
-//                        .frame(maxWidth: .infinity)
-//                        .padding(.horizontal)
-//                }
-//            }
-//            .padding(.vertical)
-//            .padding(.bottom, 60)
-//     }
-////        .scrollDisabled(false)  // 스크롤 활성화 유지
-////                .simultaneousGesture(DragGesture().onChanged { value in
-////                    // 스크롤이 최상단에 도달했을 때 상위 ScrollView로 전달
-////                    if value.translation.height > 0 {  // 아래로 스크롤
-////                        // 상위 스크롤 활성화
-////                    }
-////                })
-//            }
-//        }
-
-
-struct MovieItemView: View {
+struct MovieRowView: View {
     let movie: MovieDomain
+    let viewModel: HomeViewModel
     
     var body: some View {
-        VStack(alignment: .leading) {
-            // Poster Image
-            AsyncImage(url: movie.posterURL) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
-                Rectangle()
-                    .fill(Color.gray.opacity(0.3))
-            }
-            .frame(height: 200)
-            .cornerRadius(8)
-            
-            // Title
-            Text(movie.title)
-                .font(.system(size: 14, weight: .medium))
-                .lineLimit(2)
-            
-            // Rating
-            HStack {
-                Image(systemName: "star.fill")
-                    .foregroundColor(.yellow)
-                Text(String(format: "%.1f", movie.rating))
-                    .font(.system(size: 12))
+        Button(action: {
+            viewModel.selectMovie(movie)
+        }) {
+            HStack(spacing: 16) {
+                // Poster Image
+                AsyncImage(url: movie.posterURL) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    Rectangle()
+                        .fill(Color.gray.opacity(0.3))
+                        .overlay(
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle())
+                        )
+                }
+                .frame(width: 100, height: 150)
+                .cornerRadius(8)
+                
+                // Movie Info
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(movie.title)
+                        .font(.pretendard(size: 18, family: .bold))
+                        .lineLimit(2)
+                    
+                    Text(movie.overview)
+                        .font(.pretendard(size: 14, family: .regular))
+                        .foregroundColor(.gray)
+                        .lineLimit(3)
+                    
+                    HStack {
+                        Image(systemName: "star.fill")
+                            .foregroundColor(.yellow)
+                        Text(String(format: "%.1f", movie.rating))
+                            .font(.pretendard(size: 14, family: .medium))
+                    }
+                }
+                
+                Spacer()
             }
         }
+        .foregroundColor(.primary)
     }
 }
-
