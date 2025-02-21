@@ -17,12 +17,12 @@ class DataManager {
     }
     
     // 리뷰 저장 함수
-    func saveReview(movieId: Int, rating: Int, comment: String) throws {
+    func saveReview(movieId: Int, rating: Int, comment: String,posterURL: String) throws {
         guard let context = modelContext else {
             throw NSError(domain: "DataManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "ModelContext not initialized"])
         }
         
-        let review = MovieReview(movieId: movieId, rating: rating, comment: comment)
+        let review = MovieReview(movieId: movieId, rating: rating, comment: comment,posterURL: posterURL)
         context.insert(review)
         
         try context.save()
@@ -42,6 +42,7 @@ class DataManager {
             print("Rating: \(review.rating)")
             print("Comment: \(review.comment)")
             print("Created At: \(review.createdAt)")
+            print("PosterURL: \(review.posterURL)")
             print("---------------")
         }
         

@@ -37,22 +37,18 @@ struct StarRatingView: View {
         }
     }
 }
-
-
-
 struct DropdownView: View {
     @State private var show = false
     @State private var selectedItem = "All"
     @Binding var selectedRating: Int?
     
     var body: some View {
-        ZStack(alignment: .top) {
-            VStack {
-                DropdownHeader(
-                    title: $selectedItem,
-                    isExpanded: $show
-                )
-            }
+        VStack {
+            // 헤더
+            DropdownHeader(
+                title: $selectedItem,
+                isExpanded: $show
+            )
             .background(Color.white)
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
@@ -60,39 +56,87 @@ struct DropdownView: View {
             )
             .cornerRadius(10)
             
+            // 드롭다운 컨텐츠
             if show {
-                VStack {
-                    Divider()
-                        .background(Color.gray)
-                    
-                    DropdownContent(
-                        selectedItem: $selectedItem,
-                        isExpanded: $show
-                    )
-                }
+                DropdownContent(
+                    selectedItem: $selectedItem,
+                    isExpanded: $show
+                )
                 .background(Color.white)
                 .overlay(
                     RoundedRectangle(cornerRadius: 10)
                         .stroke(Color.gray, lineWidth: 1)
                 )
                 .cornerRadius(10)
-                .offset(y: 60) // 헤더로부터의 거리 조절
-                .zIndex(1)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
         .onChange(of: selectedItem) { newValue in
-
-                    if newValue == "All" {
-                        selectedRating = nil
-                    } else {
-                        // 별점 개수 계산 (예: "★★★☆☆" -> 3)
-                        selectedRating = drop.first(where: { $0.title == newValue })?.rating
-                    }
-                }
+            if newValue == "All" {
+                selectedRating = nil
+            } else {
+                selectedRating = drop.first(where: { $0.title == newValue })?.rating
+            }
+        }
         .animation(.spring(), value: show)
         .padding()
     }
 }
+
+
+//struct DropdownView: View {
+//    @State private var show = false
+//    @State private var selectedItem = "All"
+//    @Binding var selectedRating: Int?
+//    
+//    var body: some View {
+//        ZStack(alignment: .top) {
+//            VStack {
+//                DropdownHeader(
+//                    title: $selectedItem,
+//                    isExpanded: $show
+//                )
+//            }
+//            .background(Color.white)
+//            .overlay(
+//                RoundedRectangle(cornerRadius: 10)
+//                    .stroke(Color.gray, lineWidth: 1)
+//            )
+//            .cornerRadius(10)
+//            
+//            if show {
+//                VStack {
+//                    Divider()
+//                        .background(Color.gray)
+//                    
+//                    DropdownContent(
+//                        selectedItem: $selectedItem,
+//                        isExpanded: $show
+//                    )
+//                }
+//                .background(Color.white)
+//                .overlay(
+//                    RoundedRectangle(cornerRadius: 10)
+//                        .stroke(Color.gray, lineWidth: 1)
+//                )
+//                .cornerRadius(10)
+//                .offset(y: 60) // 헤더로부터의 거리 조절
+//                .zIndex(1)
+//            }
+//        }
+//        .onChange(of: selectedItem) { newValue in
+//
+//                    if newValue == "All" {
+//                        selectedRating = nil
+//                    } else {
+//                        // 별점 개수 계산 (예: "★★★☆☆" -> 3)
+//                        selectedRating = drop.first(where: { $0.title == newValue })?.rating
+//                    }
+//                }
+//        .animation(.spring(), value: show)
+//        .padding()
+//    }
+//}
 
 struct DropdownHeader: View {
     @Binding var title: String

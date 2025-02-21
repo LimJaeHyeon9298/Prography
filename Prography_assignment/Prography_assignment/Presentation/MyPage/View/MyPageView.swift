@@ -6,11 +6,13 @@
 //
 
 import SwiftUI
+import SwiftData
 
 struct MyPageView: View {
     @ObservedObject var coordinator: MyPageCoordinator
     @Binding var hideTabBar: Bool
     @State private var selectedRating: Int? = nil
+    @State private var reviews: [MovieReview] = []
     
     let columns = [
         GridItem(.flexible(), spacing: 10),
@@ -26,12 +28,12 @@ struct MyPageView: View {
             )
         }
     
-    var filteredMovies: [MovieItem] {
-           guard let selectedRating = selectedRating else {
-               return movies // "All" 선택시 모든 영화 표시
-           }
-           return movies.filter { Int($0.rating) == selectedRating }
-       }
+    var filteredReviews: [MovieReview] {
+        guard let selectedRating = selectedRating else {
+            return reviews
+        }
+        return reviews.filter { Int($0.rating) == selectedRating }
+    }
     
     var body: some View {
         NavigationStack(path: $coordinator.navigationPath) {
@@ -39,8 +41,11 @@ struct MyPageView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         LazyVGrid(columns: columns, spacing: 10) {
-                            ForEach(filteredMovies) { movie in
-                                MovieGridItemView(movie: movie)
+                            ForEach(filteredReviews) { review in
+                                MovieGridItemView(movie: review, onTapItem: { movieId in
+                                    coordinator.navigate(to: .detail(movieId: movieId))
+                                }
+                            )
                             }
                         }
                         .padding(.horizontal, 10)
@@ -61,8 +66,20 @@ struct MyPageView: View {
                 coordinator.view(for: route)
             }
         }
+        .onAppear {
+                    loadReviews()
+                }
         .onChange(of: coordinator.navigationPath.count) { count in
             hideTabBar = count > 0
         }
     }
+    
+    private func loadReviews() {
+           do {
+               let descriptor = FetchDescriptor<MovieReview>()
+               reviews = try DataManager.shared.modelContext.fetch(descriptor)
+           } catch {
+               print("Error fetching reviews: \(error)")
+           }
+       }
 }

@@ -14,11 +14,13 @@ class MovieReview {
     var rating: Int
     var comment: String
     var createdAt: Date
+    var posterURL: String
     
-    init(movieId: Int, rating: Int, comment: String) {
+    init(movieId: Int, rating: Int, comment: String,posterURL: String) {
         self.movieId = movieId
         self.rating = rating
         self.comment = comment
         self.createdAt = Date()
+        self.posterURL = posterURL
     }
 }

@@ -65,7 +65,7 @@ struct TopRatedMovieDomain: Equatable {
 }
 
 
-enum MovieGenre: Int {
+enum MovieGenre: Int,CaseIterable {
     case action = 28
     case adventure = 12
     case animation = 16
@@ -109,4 +109,13 @@ enum MovieGenre: Int {
         case .western: return "서부"
         }
     }
+}
+
+struct MovieDetailDomain: Equatable {
+    let id: Int
+    let title: String
+    let overview: String
+    let posterURL: URL?
+    let rating: Double
+    let genres: [String]  // 장르 이름만 배열로 저장
 }

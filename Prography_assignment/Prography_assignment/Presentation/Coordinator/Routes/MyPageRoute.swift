@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-enum MyPageRoute {
-    case detail
+enum MyPageRoute: Hashable {
+    case detail(movieId: Int)
     case settings
     case profile
 }

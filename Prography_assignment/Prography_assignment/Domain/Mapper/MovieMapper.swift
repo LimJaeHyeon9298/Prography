@@ -85,4 +85,15 @@ extension MovieMapper {
             totalResults: dto.totalResults
         )
     }
+    
+    static func toDomain(dto: MovieDetailDTO) -> MovieDetailDomain {
+        return MovieDetailDomain(
+            id: dto.id,
+            title: dto.title,
+            overview: dto.overview,
+            posterURL: dto.posterPath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500/\($0)") },
+            rating: dto.voteAverage,
+            genres: dto.genres.map { $0.name}
+        )
+    }
 }

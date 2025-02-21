@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct DetailView: View {
-    let movie: MovieDomain
+    let viewType: ViewType
     @State var text: String = ""
     @Environment(\.modelContext) private var modelContext
     @Query private var reviews: [MovieReview]
@@ -19,6 +19,37 @@ struct DetailView: View {
     @State private var keyboardHeight: CGFloat = 0
     @State private var isEditing = false
     @State private var userRating: Int = 0
+    
+   
+    
+    enum ViewType {
+            case fromHome(MovieDomain)        // HomeView에서 접근할 때
+            case fromMyPage(DetailViewModel) // MyPage에서 접근할 때
+        }
+    
+    private var movie: MovieDomain {
+           switch viewType {
+           case .fromHome(let movieDomain):
+               return movieDomain
+           case .fromMyPage(let viewModel):
+               guard let detail = viewModel.movieDetail else {
+                   // 로딩 중일 때의 기본값
+                   return MovieDomain(id: 0, title: "", overview: "", posterURL: nil, releaseDate: Date(), rating: 0.0, genreIds: [])
+               }
+               // MovieDetailDomain -> MovieDomain 변환
+               return MovieDomain(
+                   id: detail.id,
+                   title: detail.title,
+                   overview: detail.overview,
+                   posterURL: detail.posterURL,
+                   releaseDate: Date(),
+                   rating: detail.rating,
+                   genreIds: detail.genres.compactMap { genre in
+                       MovieGenre.allCases.first(where: { $0.name == genre })?.rawValue
+                   }
+               )
+           }
+       }
     
     var body: some View {
         ScrollView {
@@ -120,6 +151,11 @@ struct DetailView: View {
                 removeKeyboardObservers()
             }
         }
+        .onAppear {
+                    if case .fromMyPage(let viewModel) = viewType {
+                        viewModel.fetchMovieDetail()
+                    }
+                }
         .background(Color.white)
         .toolbar(.hidden, for: .navigationBar)
     }
@@ -129,7 +165,8 @@ struct DetailView: View {
                try DataManager.shared.saveReview(
                    movieId: movie.id,
                    rating: userRating,
-                   comment: text
+                   comment: text,
+                   posterURL: movie.posterURL?.absoluteString ?? ""
                )
                text = ""
                userRating = 0
