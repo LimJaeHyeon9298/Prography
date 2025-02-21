@@ -144,3 +144,29 @@ enum NetworkError: LocalizedError {
        }
 }
 
+protocol NetworkLogging {
+    func log(request: URLRequest)
+    func log(response: HTTPURLResponse, data: Data)
+}
+
+struct DefaultNetworkLogging: NetworkLogging {
+    func log(request: URLRequest) {
+        #if DEBUG
+        print("🌐 Request URL:", request.url?.absoluteString ?? "")
+        print("📋 Request Headers:", request.allHTTPHeaderFields ?? [:])
+        if let token = request.value(forHTTPHeaderField: "Authorization") {
+            print("🔑 Authorization:", token)
+        }
+        #endif
+    }
+    
+    func log(response: HTTPURLResponse, data: Data) {
+        #if DEBUG
+        print("📥 Response Status Code:", response.statusCode)
+        if let body = String(data: data, encoding: .utf8) {
+            print("📦 Response Body:", body)
+        }
+        #endif
+    }
+}
+

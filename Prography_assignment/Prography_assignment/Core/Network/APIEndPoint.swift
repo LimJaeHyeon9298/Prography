@@ -8,16 +8,11 @@
 import SwiftUI
 
 enum APIEndPoint{
-    case nowPlaying(page:Int, language:String,region:String?)
-    case popular(page:Int, language:String,region:String?)
-    case topRated(page:Int, language:String,region:String?)
-    case details(movieID: Int, language: String)
-    
-    
-    var baseURL: String {
-        return "https://api.themoviedb.org/3"
-    }
-    
+    case nowPlaying(page: Page, parameters: CommonQueryParameters)
+    case popular(page: Page, parameters: CommonQueryParameters)
+    case topRated(page: Page, parameters: CommonQueryParameters)
+    case details(movieID: Int, parameters: CommonQueryParameters)
+
     var path:String {
         switch self {
         case .nowPlaying:
@@ -32,24 +27,18 @@ enum APIEndPoint{
     }
     
     var queryItems: [URLQueryItem] {
-            switch self {
-            case .nowPlaying(let page, let language, let region),
-                 .popular(let page, let language, let region),
-                 .topRated(let page, let language, let region):
-                var items = [
-                    URLQueryItem(name: "page", value: "\(page)"),
-                    URLQueryItem(name: "language", value: language)
-                ]
-                if let region = region {
-                    items.append(URLQueryItem(name: "region", value: region))
-                }
-                return items
-            case .details(_, let language):
-                return [
-                    URLQueryItem(name: "language", value: language)
-                ]
-            }
+        switch self {
+        case .nowPlaying(let page, let parameters),
+             .popular(let page, let parameters),
+             .topRated(let page, let parameters):
+            var items = parameters.queryItems
+            items.append(URLQueryItem(name: "page", value: "\(page.number)"))
+            return items
+            
+        case .details(_, let parameters):
+            return parameters.queryItems
         }
+    }
     
 }
 
@@ -70,13 +59,13 @@ enum Environment {
 struct Page {
     let number: Int
     
-    init?(number: Int) {
+    init?(_ number: Int) {
         guard number > 0, number <= 500 else { return nil }
         self.number = number
     }
 }
 
-struct CommonQureyParameters {
+struct CommonQueryParameters {
     let language: String
     let region: String?
     
