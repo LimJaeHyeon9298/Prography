@@ -10,9 +10,11 @@ import SwiftData
 
 @main
 struct Prography_assignmentApp: App {
+    
+    let container = DIContainer()
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            MovieReview.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
@@ -22,10 +24,16 @@ struct Prography_assignmentApp: App {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
+    
+    init() {
+            DataManager.shared.setModelContext(sharedModelContainer.mainContext)
+        }
+    
+    @State private var selectedTab: TabItem = .home
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            MainTabView(container: container)
         }
         .modelContainer(sharedModelContainer)
     }

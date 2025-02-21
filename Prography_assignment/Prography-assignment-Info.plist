@@ -4,6 +4,8 @@
 <dict>
 	<key>APIKey</key>
 	<string>$(APIKey)</string>
+	<key>AccessToken</key>
+	<string>$(AccessToken)</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>Pretendard-Bold.otf</string>
