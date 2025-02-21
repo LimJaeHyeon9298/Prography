@@ -11,10 +11,15 @@ class HomeCoordinator: CoordinatorProtocol {
     typealias Route = HomeRoute
     
     @Published var navigationPath: NavigationPath = NavigationPath()
+    private let detailUseCase: MovieDetailUseCaseProtocol
+    
+    init(detailUseCase: MovieDetailUseCaseProtocol) {
+        self.detailUseCase = detailUseCase
+    }
     
     func navigate(to route: HomeRoute) {
         switch route {
-        case .detail:
+        case .detail(let movie):
             navigationPath.append(route)
         case .search:
             navigationPath.append(route)
@@ -26,12 +31,13 @@ class HomeCoordinator: CoordinatorProtocol {
     @ViewBuilder
     func view(for route: HomeRoute) -> some View {
         switch route {
-        case .detail:
-            DetailView()
+        case .detail(let movie):
+            DetailView(viewType: .fromHome(movie))
+                .toolbar(.hidden, for: .navigationBar)
         case .search:
-            DetailView()
+            EmptyView()
         case .filter:
-            DetailView()
+            EmptyView()
         }
     }
 }

@@ -33,12 +33,14 @@ struct MovieDTO: Decodable {
     let posterPath: String?
     let releaseDate: String
     let voteAverage: Double
+    let genreIds: [Int]
     
     enum CodingKeys: String, CodingKey {
         case id, title, overview
         case posterPath = "poster_path"
         case releaseDate = "release_date"
         case voteAverage = "vote_average"
+        case genreIds = "genre_ids"
     }
 }
 
@@ -101,5 +103,26 @@ struct TopRatedMovieDTO: Decodable {
         case originalLanguage = "original_language"
         case adult
         case video
+    }
+}
+
+struct GenreDTO: Decodable {
+    let id: Int
+    let name: String
+}
+
+struct MovieDetailDTO: Decodable {
+    let id: Int
+    let title: String
+    let overview: String
+    let posterPath: String?
+    let voteAverage: Double
+    let genres: [GenreDTO]
+    
+    enum CodingKeys: String, CodingKey {
+        case id, title, overview
+        case posterPath = "poster_path"
+        case voteAverage = "vote_average"
+        case genres
     }
 }

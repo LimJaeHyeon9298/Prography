@@ -20,6 +20,11 @@ class HomeViewModel: ObservableObject {
     @Published private(set) var popularMovies: PopularMovieListDomain?
     @Published private(set) var topRatedMovies: TopRatedMovieListDomain?
     
+    private let selectedMovieSubject = PassthroughSubject<MovieDomain, Never>()
+    var selectedMoviePublisher: AnyPublisher<MovieDomain, Never> {
+            selectedMovieSubject.eraseToAnyPublisher()
+        }
+    
     private let nowPlayingUseCase: FetchNowPlayingMoviesUseCase
     private let popularUseCase: PopularMovieUseCase
     private let topRatedUseCase: TopRatedMovieUseCase
@@ -37,7 +42,17 @@ class HomeViewModel: ObservableObject {
         self.topRatedUseCase = topRatedUseCase
     }
     
-    
+    func selectMovie(_ movie: MovieDomain) {
+            selectedMovieSubject.send(movie)
+        }
+    func setupNavigationSubscription(coordinator: HomeCoordinator) {
+           selectedMoviePublisher
+               .receive(on: DispatchQueue.main)
+               .sink { movie in
+                   coordinator.navigationPath.append(HomeRoute.detail(movie))
+               }
+               .store(in: &cancellables)
+       }
     func fetchNowPlaying() {
         print("fetchNowPlaying 시작")
         isLoadingNowPlaying = true

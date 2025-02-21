@@ -11,6 +11,8 @@ enum APIEndPoint{
     case nowPlaying(page:Int, language:String,region:String?)
     case popular(page:Int, language:String,region:String?)
     case topRated(page:Int, language:String,region:String?)
+    case details(movieID: Int, language: String)
+    
     
     var baseURL: String {
         return "https://api.themoviedb.org/3"
@@ -24,6 +26,8 @@ enum APIEndPoint{
             return "/movie/popular"
         case .topRated:
             return "/movie/top_rated"
+        case .details(let movieID, _):
+            return "/movie/\(movieID)"
         }
     }
     
@@ -40,6 +44,10 @@ enum APIEndPoint{
                     items.append(URLQueryItem(name: "region", value: region))
                 }
                 return items
+            case .details(_, let language):
+                return [
+                    URLQueryItem(name: "language", value: language)
+                ]
             }
         }
     

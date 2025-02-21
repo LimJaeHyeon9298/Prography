@@ -6,13 +6,61 @@
 //
 
 import SwiftUI
+import Combine
 
-struct DetailViewModel: View {
-    var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+class DetailViewModel: ObservableObject {
+    private let movieId: Int
+    private let useCase: MovieDetailUseCaseProtocol
+    private var cancellables = Set<AnyCancellable>()
+    
+    // Published 프로퍼티
+    @Published private(set) var movieDetail: MovieDetailDomain?
+    @Published private(set) var isLoading = false
+    @Published private(set) var error: NetworkError?
+    
+    init(movieId: Int, useCase: MovieDetailUseCaseProtocol) {
+        self.movieId = movieId
+        self.useCase = useCase
     }
-}
-
-#Preview {
-    DetailViewModel()
+    
+    func fetchMovieDetail() {
+        isLoading = true
+        error = nil
+        
+        useCase.execute(movieId: movieId)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                self?.isLoading = false
+                switch completion {
+                case .finished:
+                    break
+                case .failure(let error):
+                    self?.error = error
+                }
+            } receiveValue: { [weak self] movieDetail in
+                self?.movieDetail = movieDetail
+            }
+            .store(in: &cancellables)
+    }
+    
+    // View에서 필요한 computed properties
+    var title: String {
+        movieDetail?.title ?? ""
+    }
+    
+    var overview: String {
+        movieDetail?.overview ?? ""
+    }
+    
+    var rating: Double {
+        movieDetail?.rating ?? 0.0
+    }
+    
+    var posterURL: URL? {
+        movieDetail?.posterURL
+    }
+    
+    var genres: [String] {
+        movieDetail?.genres ?? []
+    }
 }

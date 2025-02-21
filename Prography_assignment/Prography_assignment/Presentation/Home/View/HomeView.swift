@@ -6,10 +6,13 @@
 //
 
 import SwiftUI
-
+//
 struct HomeView: View {
+    @State private var reviews: [MovieReview] = []
     @ObservedObject var coordinator: HomeCoordinator
     @Binding var hideTabBar: Bool
+    @State private var selectedTab = 0
+    private let tabs = ["인기 영화", "최신 개봉작", "추천 영화"]
     
     @StateObject private var viewModel: HomeViewModel
         
@@ -29,26 +32,39 @@ struct HomeView: View {
             self._viewModel = StateObject(wrappedValue: HomeViewModel(nowPlayingUseCase: useCase, popularUseCase: useCase2, topRatedUseCase: useCase3))
         }
     
-    
+
     var body: some View {
         NavigationStack(path: $coordinator.navigationPath) {
-            VStack {
-                Button("Go to Detail") {
-                    hideTabBar = true 
-                    coordinator.navigate(to: .detail)
+            ScrollView {
+                LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                    
+                    CarouselView(viewModel: viewModel)
+                        .padding(.top, 10)
+                        .frame(height: 200)
+                    
+                    Section {
+                        MovieSectionsContent(selectedTab: $selectedTab, tabs: tabs)
+                            .frame(minHeight: UIScreen.main.bounds.height - 200)
+                    } header: {
+                        MovieSectionsHeader(selectedTab: $selectedTab, tabs: tabs)
+                            .background(Color.white)
+
+                            
+
+                    }
+                    .padding(.top,20)
                 }
             }
             .navigationDestination(for: HomeRoute.self) { route in
                 coordinator.view(for: route)
             }
-            
             .onAppear {
                 print("HomeView appeared")
                 viewModel.fetchInitialData()
+                viewModel.setupNavigationSubscription(coordinator: coordinator)
+                loadReviews()
+
             }
-//            .onChange(of: viewModel.isLoading) { isLoading in
-//                print("로딩 상태 변경:", isLoading)
-//            }
             .onChange(of: viewModel.nowPlayingMovies) { movies in
                             if let movies = movies {
                                 print("영화 데이터 받아옴:")
@@ -107,29 +123,19 @@ struct HomeView: View {
                     print("\n====== End of Top Rated Movies ======")
                 }
             }
-            
-//            .onChange(of: viewModel.topRatedMovies) { movies in
-//               if let movies = movies {
-//                   
-//                   print("인기 영화 데이터 받아옴:")
-//                   print("- 현재 페이지:", movies.currentPage)
-//                   print("- 전체 페이지:", movies.totalPages)
-//                   print("- 영화 개수:", movies.movies.count)
-//                   if let firstMovie = movies.movies.first {
-//                       print("첫 번째 영화:")
-//                       print("- 제목:", firstMovie.title)
-//                       print("- 개봉일:", firstMovie.releaseDate)
-//                       print("- overview:", firstMovie.overview)
-//                   }
-//               }
-//            }
-            
         }
         .onChange(of: coordinator.navigationPath.count) { count in
                     hideTabBar = count > 0
-                }
-        
-
+        }
     }
+    
+    private func loadReviews() {
+          do {
+              reviews = try DataManager.shared.fetchReviews(for: 939243)
+              
+          } catch {
+              print("Error fetching reviews: \(error)")
+          }
+      }
 }
 
