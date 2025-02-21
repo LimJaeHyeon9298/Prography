@@ -8,7 +8,12 @@
 import SwiftUI
 import SwiftData
 
-struct DetailView: View {
+enum NavigationSource {
+    case home
+    case myPage
+}
+
+struct DetailView<T: ObservableObject>: View where T: CoordinatorProtocol {
     @State var text: String = ""
  //   @Environment(\.modelContext) private var modelContext
     @StateObject var viewModel: DetailViewModel
@@ -20,116 +25,125 @@ struct DetailView: View {
     @State private var isEditing = false
     @State private var userRating: Int = 0
     
-    init(viewModel: DetailViewModel) {
+    @ObservedObject var coordinator: T
+    
+    init(viewModel: DetailViewModel,coordinator: T) {
         _viewModel = StateObject(wrappedValue: viewModel)
+        self.coordinator = coordinator
     }
     
 
     
     var body: some View {
-        ScrollView {
-            ZStack {
-                VStack(spacing: 0) {
-                    // 포스터 이미지 영역
-                    PosterImageView(posterURL: viewModel.posterURL)
-                        .frame(height: UIScreen.main.bounds.height * 0.35)
-                    
-                    // 별점 영역
-                    RatingSection(userRating: $userRating)
-                        .padding(.top, 16)
-                    
-                    // 컨텐츠 영역
-                    VStack(alignment: .leading, spacing: 24) {
-                        // 제목 영역
-                        MovieTitleSection(
-                            title: viewModel.title,
-                            rating: viewModel.rating
-                        )
+        VStack {
+          CustomNavigationBar(coordinator: coordinator) 
+            
+
+            ScrollView {
+                ZStack {
+                    VStack(spacing: 0) {
+                        // 포스터 이미지 영역
+                        PosterImageView(posterURL: viewModel.posterURL)
+                            .frame(height: UIScreen.main.bounds.height * 0.35)
                         
-                        // 장르 영역
-                        GenreSection(genres: viewModel.genres)
+                        // 별점 영역
+                        RatingSection(userRating: $userRating)
+                            .padding(.top, 16)
                         
-                        // 줄거리 영역
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("줄거리")
-                                .font(.pretendard(size: 18, family: .bold))
+                        // 컨텐츠 영역
+                        VStack(alignment: .leading, spacing: 24) {
+                            // 제목 영역
+                            MovieTitleSection(
+                                title: viewModel.title,
+                                rating: viewModel.rating
+                            )
                             
-                            Text(viewModel.overview)
-                                .font(.pretendard(size: 16, family: .regular))
-                                .lineSpacing(4)
-                                .foregroundColor(.black.opacity(0.8))
-                        }
-                        
-                        // 코멘트 영역
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Comment")
-                                .font(.pretendard(size: 18, family: .bold))
-                                .foregroundStyle(.black)
+                            // 장르 영역
+                            GenreSection(genres: viewModel.genres)
                             
-                            HStack(spacing: 10) {
-                                ZStack {
-                                 RoundedRectangle(cornerRadius: 16)
-                                   // Capsule()
-                                        .strokeBorder(Color.secondary, lineWidth: 1)
-                                        .background(Color.white)
-                                        .frame(height: max(50, textEditorHeight))
+                            // 줄거리 영역
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("줄거리")
+                                    .font(.pretendard(size: 18, family: .bold))
+                                
+                                Text(viewModel.overview)
+                                    .font(.pretendard(size: 16, family: .regular))
+                                    .lineSpacing(4)
+                                    .foregroundColor(.black.opacity(0.8))
+                            }
+                            
+                            // 코멘트 영역
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Comment")
+                                    .font(.pretendard(size: 18, family: .bold))
+                                    .foregroundStyle(.black)
+                                
+                                HStack(spacing: 10) {
+                                    ZStack {
+                                     RoundedRectangle(cornerRadius: 16)
+                                       // Capsule()
+                                            .strokeBorder(Color.secondary, lineWidth: 1)
+                                            .background(Color.white)
+                                            .frame(height: max(50, textEditorHeight))
 
-                                    HStack {
-                                        DynamicHeightTextEditor(text: $text, height: $textEditorHeight, maxEditorHeight: maxEditorHeight)
-                                            .frame(height: min(textEditorHeight, maxEditorHeight))
-                                            .background(.yellow)
-                                            .padding(.vertical, 8)
+                                        HStack {
+                                            DynamicHeightTextEditor(text: $text, height: $textEditorHeight, maxEditorHeight: maxEditorHeight)
+                                                .frame(height: min(textEditorHeight, maxEditorHeight))
+                                                .background(.yellow)
+                                                .padding(.vertical, 8)
 
-                                        Spacer()
+                                            Spacer()
 
-                                        Button(action: {
-                                           hideKeyboard()
-                                            addComment()
-                                        }) {
-                                            Image(systemName: "paperplane.fill")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: 24, height: 24)
+                                            Button(action: {
+                                               hideKeyboard()
+                                                addComment()
+                                            }) {
+                                                Image(systemName: "paperplane.fill")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: 24, height: 24)
+                                            }
+                                            .disabled(text.isEmpty || userRating == 0)
                                         }
-                                        .disabled(text.isEmpty || userRating == 0)
+                                        .padding(.horizontal, 12)
                                     }
-                                    .padding(.horizontal, 12)
+                                    .padding(.bottom, 8)
                                 }
+                                .padding(.horizontal)
                                 .padding(.bottom, 8)
-                            }
-                            .padding(.horizontal)
-                            .padding(.bottom, 8)
 
-                        }
-                        .padding(.bottom , 8)
-                        
-                        Spacer(minLength: 32)
-                    }
-                    .padding(.horizontal, 16)
-                    .padding(.top, 24)
-                }
-                
-                if isEditing {
-                    VStack {
-                        Color.clear
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                hideKeyboard()
                             }
-                        Spacer()
-                            .frame(height: textEditorHeight + 16)
+                            .padding(.bottom , 8)
+                            
+                            Spacer(minLength: 32)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.top, 24)
+                    }
+                    
+                    if isEditing {
+                        VStack {
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    hideKeyboard()
+                                }
+                            Spacer()
+                                .frame(height: textEditorHeight + 16)
+                        }
                     }
                 }
-            }
-           
-            .onAppear {
-                viewModel.fetchMovieDetail()
-                setupKeyboardObservers()
-            }
-            .onDisappear {
-                removeKeyboardObservers()
+               
+                .onAppear {
+                    viewModel.fetchMovieDetail()
+                    setupKeyboardObservers()
+                }
+                .onDisappear {
+                    removeKeyboardObservers()
+                }
             }
         }
+
 
         .background(Color.white)
         .toolbar(.hidden, for: .navigationBar)

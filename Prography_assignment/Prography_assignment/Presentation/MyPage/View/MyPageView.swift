@@ -37,31 +37,35 @@ struct MyPageView: View {
     
     var body: some View {
         NavigationStack(path: $coordinator.navigationPath) {
-            ZStack(alignment: .top) {
-                ScrollView {
-                    VStack(spacing: 0) {
-                        LazyVGrid(columns: columns, spacing: 10) {
-                            ForEach(filteredReviews) { review in
-                                MovieGridItemView(movie: review, onTapItem: { movieId in
-                                    coordinator.navigate(to: .detail(movieId: movieId))
+            VStack {
+                LogoView()
+                ZStack(alignment: .top) {
+                    ScrollView {
+                        VStack(spacing: 0) {
+                            LazyVGrid(columns: columns, spacing: 10) {
+                                ForEach(filteredReviews) { review in
+                                    MovieGridItemView(movie: review, onTapItem: { movieId in
+                                        coordinator.navigate(to: .detail(movieId: movieId))
+                                    }
+                                )
                                 }
-                            )
                             }
+                            .padding(.horizontal, 10)
+                            .padding(.top, 100)
+                            .padding(.bottom, 150)
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.top, 100)
-                        .padding(.bottom, 150)
+                    }
+                    .ignoresSafeArea(.container, edges: .bottom)
+                    
+                    VStack {
+                        DropdownView(selectedRating: $selectedRating)
+                            .background(Color.white)
+                            .zIndex(2)
+                        Spacer()
                     }
                 }
-                .ignoresSafeArea(.container, edges: .bottom)
-                
-                VStack {
-                    DropdownView(selectedRating: $selectedRating)
-                        .background(Color.white)
-                        .zIndex(2)
-                    Spacer()
-                }
             }
+          
             .navigationDestination(for: MyPageRoute.self) { route in
                 coordinator.view(for: route)
             }

@@ -28,25 +28,32 @@ struct HomeView: View {
     
     var body: some View {
         NavigationStack(path: $coordinator.navigationPath) {
-            ScrollView {
-                LazyVStack(spacing: 20, pinnedViews: [.sectionHeaders]) {
-                    // Top Content (Carousel)
-                    CarouselView(viewModel: viewModel)
-                        .padding(.top, 10)
-                        .frame(height: 200)
-                    
-                    // Section with Sticky Header and Content
-                    Section(header:
-                        MovieSectionsHeader(selectedTab: $selectedTab, tabs: tabs)
-                            .background(Color.white)
-                    ) {
+           
+            VStack {
+                LogoView()
+                ScrollView {
+                    LazyVStack(spacing: 20, pinnedViews: [.sectionHeaders]) {
+                        // Top Content (Carousel)
+                        CarouselView(viewModel: viewModel)
+                            .padding(.top, 10)
+                            .frame(height: 200)
                         
-                        MovieListSection(viewModel: viewModel, category: selectedTab == 0 ? .nowPlaying : (selectedTab == 1 ? .popular : .topRated))
-                        
-                    }
+                        // Section with Sticky Header and Content
+                        Section(header:
+                            MovieSectionsHeader(selectedTab: $selectedTab, tabs: tabs)
+                                .background(Color.white)
+                                
+                        ) {
+                            
+                            MovieListSection(viewModel: viewModel, category: selectedTab == 0 ? .nowPlaying : (selectedTab == 1 ? .popular : .topRated))
+                            
+                        }
 
+                    }
                 }
             }
+            
+           
             .padding(.bottom, 65)
             .navigationDestination(for: HomeRoute.self) { route in
                 coordinator.view(for: route)

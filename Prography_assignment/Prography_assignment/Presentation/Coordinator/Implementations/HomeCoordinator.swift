@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-class HomeCoordinator: CoordinatorProtocol {
+class HomeCoordinator: CoordinatorProtocol,NavigationPopProtocol {
     typealias Route = HomeRoute
     
     @Published var navigationPath: NavigationPath = NavigationPath()
@@ -33,7 +33,7 @@ class HomeCoordinator: CoordinatorProtocol {
         switch route {
         case .detail(let movie):
             let viewModel = container.makeDetailViewModel(movieId: movie.id)
-                        DetailView(viewModel: viewModel)
+            DetailView(viewModel: viewModel, coordinator: self)
                            .navigationBarHidden(true)
 
         case .search:

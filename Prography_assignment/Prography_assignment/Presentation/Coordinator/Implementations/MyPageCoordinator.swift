@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-class MyPageCoordinator: CoordinatorProtocol {
+class MyPageCoordinator: CoordinatorProtocol,NavigationPopProtocol {
     typealias Route = MyPageRoute
     
     @Published var navigationPath: NavigationPath = NavigationPath()
@@ -35,8 +35,8 @@ class MyPageCoordinator: CoordinatorProtocol {
         switch route {
         case .detail(let movieId):
             let viewModel = container.makeDetailViewModel(movieId: movieId)
-            DetailView(viewModel: viewModel)
-                .navigationBarHidden(true)
+            DetailView(viewModel: viewModel, coordinator: self)
+                           .navigationBarHidden(true)
         case .settings:
             EmptyView()
         case .profile:
