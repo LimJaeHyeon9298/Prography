@@ -45,3 +45,38 @@ enum APIEndPoint{
     
 }
 
+enum Environment {
+    case development
+    case production
+    
+    var baseURL: String {
+        switch self {
+        case .development:
+            return "https://api.themoviedb.org/3"
+        case .production:
+            return "https://api.themoviedb.org/3"
+        }
+    }
+}
+
+struct Page {
+    let number: Int
+    
+    init?(number: Int) {
+        guard number > 0, number <= 500 else { return nil }
+        self.number = number
+    }
+}
+
+struct CommonQureyParameters {
+    let language: String
+    let region: String?
+    
+    var queryItems: [URLQueryItem] {
+        var items = [URLQueryItem(name: "language", value: language)]
+        if let region = region {
+            items.append(URLQueryItem(name: "region", value: region))
+        }
+        return items
+    }
+}

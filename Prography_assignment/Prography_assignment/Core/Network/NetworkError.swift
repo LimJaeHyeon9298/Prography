@@ -8,31 +8,31 @@
 import SwiftUI
 
 enum NetworkError: LocalizedError {
-    case invalidAPIKey
-    case suspendedAPIKey
-    case authenticationFailed
-    case accessDenied
-    case invalidURL
+    case invalidAPIKey(String?)
+    case suspendedAPIKey(String?)
+    case authenticationFailed(String?)
+    case accessDenied(String?)
+    case invalidURL(String?)
     
-    case invalidParameters
-    case invalidDateRange
-    case invalidPage
-    case invalidDate
+    case invalidParameters(String?)
+    case invalidDateRange(start: String, end: String)
+    case invalidPage(Int)
+    case invalidDate(String)
     case tooManyRequests(limit: Int)
-    case tooManyAppendResponses
-    case invalidTimezone
+    case tooManyAppendResponses(Int)
+    case invalidTimezone(String?)
     case confirmationRequired
     
     case invalidResponse
-    case resourceNotFound
-    case duplicateEntry
+    case resourceNotFound(String?)
+    case duplicateEntry(String?)
     case serviceOffline
     case maintenanceMode
     case timeout
-    case invalidFormat
-    case backendConnectionError
+    case invalidFormat(String?)
+    case backendConnectionError(String?)
     
-    case invalidToken
+    case invalidToken(String?)
     case sessionNotFound
     case emailNotVerified
     case accountDisabled
@@ -44,29 +44,29 @@ enum NetworkError: LocalizedError {
     
     var errorDescription: String? {
             switch self {
-            case .invalidAPIKey:
-                return "Invalid API key. Please check your API key."
-            case .suspendedAPIKey:
-                return "Your API key has been suspended. Please contact TMDB."
-            case .authenticationFailed:
-                return "Authentication failed. Please check your credentials."
-            case .accessDenied:
-                return "You don't have permission to access this resource."
-                
-            case .invalidParameters:
-                return "Invalid parameters provided in the request."
-            case .invalidDateRange:
-                return "Invalid date range. Date range should not exceed 14 days."
-            case .invalidPage:
-                return "Invalid page number. Pages should be between 1 and 500."
+            case .invalidAPIKey(let message):
+                return "Invalid API key. \(message ?? "Please check your API key.")"
+            case .suspendedAPIKey(let message):
+                return "Your API key has been suspended. \(message ?? "Please contact TMDB.")"
+            case .authenticationFailed(let message):
+                return "Authentication failed. \(message ?? "Please check your credentials.")"
+            case .accessDenied(let message):
+                return "Access denied. \(message ?? "You don't have permission to access this resource.")"
+                           
+            case .invalidParameters(let param):
+                return "Invalid parameters provided: \(param ?? "unknown parameter")"
+            case .invalidDateRange(let start, let end):
+                return "Invalid date range: \(start) to \(end). Date range should not exceed 14 days."
+            case .invalidPage(let page):
+                return "Invalid page number: \(page). Pages should be between 1 and 500."
             case .invalidDate:
                 return "Invalid date format. Use YYYY-MM-DD format."
             case .tooManyRequests(let limit):
                 return "Rate limit exceeded. Maximum requests allowed: \(limit)"
-            case .tooManyAppendResponses:
-                return "Too many append to response objects. Maximum is 20."
-            case .invalidTimezone:
-                return "Invalid timezone provided."
+            case .tooManyAppendResponses(let count):
+                return "Too many append to response objects: \(count). Maximum is 20."
+            case .invalidTimezone(let timezone):
+                return "Invalid timezone provided: \(timezone ?? "unknown")"
             case .confirmationRequired:
                 return "Action needs confirmation. Please provide confirm=true parameter."
                 
@@ -104,43 +104,43 @@ enum NetworkError: LocalizedError {
                 return "Network error occurred: \(error.localizedDescription)"
             case .unknown(let statusCode, let message):
                 return "Unknown error occurred (Status: \(statusCode)): \(message ?? "No additional information")"
-            case .invalidURL:
-                return "Wrong URL Access"
+            case .invalidURL(let url):
+                return "Invalid URL: \(url ?? "unknown URL")"
             }
         }
     
     
     static func from(statusCode: Int, message: String?) -> NetworkError {
-            switch statusCode {
-            case 401:
-                if message?.contains("API key") ?? false {
-                    return .invalidAPIKey
-                } else if message?.contains("suspended") ?? false {
-                    return .suspendedAPIKey
-                } else {
-                    return .authenticationFailed
-                }
-            case 404:
-                return .resourceNotFound
-            case 422:
-                if message?.contains("date range") ?? false {
-                    return .invalidDateRange
-                } else {
-                    return .invalidParameters
-                }
-            case 429:
-                return .tooManyRequests(limit: 40)
-            case 503:
-                if message?.contains("maintenance") ?? false {
-                    return .maintenanceMode
-                } else {
-                    return .serviceOffline
-                }
-            case 504:
-                return .timeout
-            default:
-                return .unknown(statusCode: statusCode, message: message)
-            }
-        }
+           switch statusCode {
+           case 401:
+               if message?.contains("API key") ?? false {
+                   return .invalidAPIKey(message)
+               } else if message?.contains("suspended") ?? false {
+                   return .suspendedAPIKey(message)
+               } else {
+                   return .authenticationFailed(message)
+               }
+           case 404:
+               return .resourceNotFound(message)
+           case 422:
+               if message?.contains("date range") ?? false {
+                   return .invalidDateRange(start: "unknown", end: "unknown")
+               } else {
+                   return .invalidParameters(message)
+               }
+           case 429:
+               return .tooManyRequests(limit: 40)
+           case 503:
+               if message?.contains("maintenance") ?? false {
+                   return .maintenanceMode
+               } else {
+                   return .serviceOffline
+               }
+           case 504:
+               return .timeout
+           default:
+               return .unknown(statusCode: statusCode, message: message)
+           }
+       }
 }
 
