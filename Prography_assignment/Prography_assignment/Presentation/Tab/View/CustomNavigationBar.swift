@@ -22,9 +22,20 @@ struct LogoView: View {
 
 struct CustomNavigationBar<T: ObservableObject>: View where T: CoordinatorProtocol {
     @ObservedObject var coordinator: T
+    var hideRightButton: Bool = false
+    var onEdit: (() -> Void)?
+    var onDelete: (() -> Void)?
     
-    init(coordinator: T) {
+    init(
+        coordinator: T,
+        hideRightButton: Bool = false,
+        onEdit: (() -> Void)? = nil,
+        onDelete: (() -> Void)? = nil
+    ) {
         self.coordinator = coordinator
+        self.hideRightButton = hideRightButton
+        self.onEdit = onEdit
+        self.onDelete = onDelete
     }
 
     var body: some View {
@@ -42,11 +53,26 @@ struct CustomNavigationBar<T: ObservableObject>: View where T: CoordinatorProtoc
                 .foregroundStyle(Color.logo)
                 .frame(maxWidth: .infinity)
 
-            Button(action: {
-            }) {
-                Image(systemName: "ellipsis")
-                    .font(.system(size: 20, weight: .semibold))
-                    .foregroundStyle(Color.black)
+            if hideRightButton {
+                Menu {
+                    Button(action: {
+                        onEdit?()
+                    }) {
+                        Label("수정하기", systemImage: "pencil")
+                    }
+                    
+                    Button(role: .destructive, action: {
+                        onDelete?()
+                    }) {
+                        Label("삭제하기", systemImage: "trash")
+                    }
+                } label: {
+                    Image(systemName: "ellipsis")
+                        .font(.system(size: 20, weight: .semibold))
+                        .foregroundStyle(Color.black)
+                }
+            } else {
+                Color.clear.frame(width: 20, height: 20)
             }
         }
         .padding(.horizontal, 16)

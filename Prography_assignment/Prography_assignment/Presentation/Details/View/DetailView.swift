@@ -14,155 +14,129 @@ enum NavigationSource {
 }
 
 struct DetailView<T: ObservableObject>: View where T: CoordinatorProtocol {
-    @State var text: String = ""
- //   @Environment(\.modelContext) private var modelContext
     @StateObject var viewModel: DetailViewModel
-    @Query private var reviews: [MovieReview]
-    @State private var isEditMode = false
+    @ObservedObject var coordinator: T
+    
     @State private var textEditorHeight: CGFloat = 34
     @State private var maxEditorHeight: CGFloat = 170
     @State private var keyboardHeight: CGFloat = 0
     @State private var isEditing = false
-    @State private var userRating: Int = 0
     
-    @ObservedObject var coordinator: T
-    
-    init(viewModel: DetailViewModel,coordinator: T) {
-        _viewModel = StateObject(wrappedValue: viewModel)
-        self.coordinator = coordinator
-    }
-    
-
+       
     
     var body: some View {
         VStack {
-          CustomNavigationBar(coordinator: coordinator) 
+            CustomNavigationBar(
+                coordinator: coordinator,
+                hideRightButton: viewModel.hasExistingReview,
+                onEdit: {
+                    // 수정 모드로 전환하는 로직
+                    viewModel.isEditing = true
+                },
+                onDelete: {
+                    // 삭제 확인 알림 표시
+                    viewModel.showingDeleteConfirmation = true
+                }
+            )
             
-
+            
             ScrollView {
-                ZStack {
-                    VStack(spacing: 0) {
-                        // 포스터 이미지 영역
-                        PosterImageView(posterURL: viewModel.posterURL)
-                            .frame(height: UIScreen.main.bounds.height * 0.35)
-                        
-                        // 별점 영역
-                        RatingSection(userRating: $userRating)
-                            .padding(.top, 16)
-                        
-                        // 컨텐츠 영역
-                        VStack(alignment: .leading, spacing: 24) {
-                            // 제목 영역
-                            MovieTitleSection(
-                                title: viewModel.title,
-                                rating: viewModel.rating
-                            )
-                            
-                            // 장르 영역
-                            GenreSection(genres: viewModel.genres)
-                            
-                            // 줄거리 영역
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("줄거리")
-                                    .font(.pretendard(size: 18, family: .bold))
-                                
-                                Text(viewModel.overview)
-                                    .font(.pretendard(size: 16, family: .regular))
-                                    .lineSpacing(4)
-                                    .foregroundColor(.black.opacity(0.8))
-                            }
-                            
-                            // 코멘트 영역
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Comment")
-                                    .font(.pretendard(size: 18, family: .bold))
-                                    .foregroundStyle(.black)
-                                
-                                HStack(spacing: 10) {
-                                    ZStack {
-                                     RoundedRectangle(cornerRadius: 16)
-                                       // Capsule()
-                                            .strokeBorder(Color.secondary, lineWidth: 1)
-                                            .background(Color.white)
-                                            .frame(height: max(50, textEditorHeight))
-
-                                        HStack {
-                                            DynamicHeightTextEditor(text: $text, height: $textEditorHeight, maxEditorHeight: maxEditorHeight)
-                                                .frame(height: min(textEditorHeight, maxEditorHeight))
-                                                .background(.yellow)
-                                                .padding(.vertical, 8)
-
-                                            Spacer()
-
-                                            Button(action: {
-                                               hideKeyboard()
-                                                addComment()
-                                            }) {
-                                                Image(systemName: "paperplane.fill")
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .frame(width: 24, height: 24)
-                                            }
-                                            .disabled(text.isEmpty || userRating == 0)
-                                        }
-                                        .padding(.horizontal, 12)
-                                    }
-                                    .padding(.bottom, 8)
-                                }
-                                .padding(.horizontal)
-                                .padding(.bottom, 8)
-
-                            }
-                            .padding(.bottom , 8)
-                            
-                            Spacer(minLength: 32)
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.top, 24)
-                    }
+                VStack(spacing: 0) {
+                    // 포스터 이미지 영역
+                    PosterImageView(posterURL: viewModel.posterURL)
+                        .frame(height: UIScreen.main.bounds.height * 0.35)
                     
-                    if isEditing {
-                        VStack {
-                            Color.clear
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    hideKeyboard()
-                                }
-                            Spacer()
-                                .frame(height: textEditorHeight + 16)
+         
+                    if viewModel.hasExistingReview {
+                                            // 기존 리뷰의 별점은 RatingSection을 비활성화로 사용
+                                            RatingSection(userRating: .constant(viewModel.userRating))  // constant binding으로 수정 불가능하게
+                                                .allowsHitTesting(false)
+                                                .padding(.top, 16)
+                                        } else {
+                                            // 새로운 별점 입력 UI
+                                            RatingSection(userRating: $viewModel.userRating)
+                                                .padding(.top, 16)
+                                        }
+                    
+                    // 컨텐츠 영역
+                    VStack(alignment: .leading, spacing: 24) {
+                        MovieTitleSection(title: viewModel.title, rating: viewModel.rating)
+                        GenreSection(genres: viewModel.genres)
+                        
+                        // 줄거리 영역
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("줄거리")
+                                .font(.pretendard(size: 18, family: .bold))
+                            Text(viewModel.overview)
+                                .font(.pretendard(size: 16, family: .regular))
+                                .lineSpacing(4)
                         }
+                        
+                        // 코멘트 영역
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Comment")
+                                .font(.pretendard(size: 18, family: .bold))
+                            
+                            if viewModel.hasExistingReview {
+                                ExistingReviewView(
+                                    rating: viewModel.userRating,
+                                    comment: viewModel.comment
+                                )
+                            } else {
+                                NewReviewEditorView(
+                                    text: $viewModel.comment,
+                                    userRating: $viewModel.userRating,
+                                    textEditorHeight: $textEditorHeight,
+                                    onSubmit: {
+                                        viewModel.saveReview(
+                                            title: viewModel.title,
+                                            rating: viewModel.userRating,
+                                            comment: viewModel.comment
+                                        )
+                                    }
+                                )
+                            }
+                        }
+                        
+                        Spacer(minLength: 32)
                     }
-                }
-               
-                .onAppear {
-                    viewModel.fetchMovieDetail()
-                    setupKeyboardObservers()
-                }
-                .onDisappear {
-                    removeKeyboardObservers()
+                    .padding(.horizontal, 16)
+                    .padding(.top, 24)
                 }
             }
         }
+        .alert("리뷰 삭제", isPresented: $viewModel.showingDeleteConfirmation) {
+            Button("삭제", role: .destructive) {
+                viewModel.deleteReview()
+            }
+            Button("취소", role: .cancel) {}
+        } message: {
+            Text("이 리뷰를 정말 삭제하시겠습니까?")
+        }
+        .alert("삭제 완료", isPresented: $viewModel.showingDeleteAlert) {
+            Button("확인", role: .cancel) {
 
-
+              coordinator.navigationPath.removeLast()
+            }
+        } message: {
+            Text("리뷰가 성공적으로 삭제되었습니다.")
+        }
+        .alert("저장 완료", isPresented: $viewModel.showingSaveAlert) {
+                   Button("확인", role: .cancel) { }
+               } message: {
+                   Text("리뷰가 저장되었습니다!")
+               }
         .background(Color.white)
         .toolbar(.hidden, for: .navigationBar)
+        .onAppear {
+            viewModel.checkExistingReview()
+            viewModel.fetchMovieDetail()
+            setupKeyboardObservers()
+        }
+        .onDisappear {
+            hideKeyboard()
+        }
     }
-    
-    private func addComment() {
-           do {
-               try DataManager.shared.saveReview(
-                    movieId: viewModel.movieId,
-                    rating: userRating,
-                    comment: text,
-                    posterURL: viewModel.posterURL?.absoluteString ?? ""
-               )
-               text = ""
-               userRating = 0
-           } catch {
-               print("Error saving review: \(error)")
-           }
-       }
     
     private func hideKeyboard() {
         UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
@@ -187,6 +161,74 @@ struct DetailView<T: ObservableObject>: View where T: CoordinatorProtocol {
         NotificationCenter.default.removeObserver(self)
     }
 }
+
+
+
+
+
+
+struct ExistingReviewView: View {
+    let rating: Int
+    let comment: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.gray.opacity(0.1))
+                .overlay(
+                    Text(comment)
+                        .font(.pretendard(size: 16, family: .regular))
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .padding()
+                        .foregroundColor(.black)
+                )
+                .frame(minHeight: 100)
+        }
+    }
+}
+
+// 새 리뷰 작성용 View
+struct NewReviewEditorView: View {
+    @Binding var text: String
+    @Binding var userRating: Int
+    @Binding var textEditorHeight: CGFloat
+    let onSubmit: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 16)
+                    .strokeBorder(Color.secondary, lineWidth: 1)
+                    .background(Color.white)
+                    .frame(height: max(50, textEditorHeight))
+                
+                HStack {
+                    DynamicHeightTextEditor(
+                        text: $text,
+                        height: $textEditorHeight,
+                        maxEditorHeight: 170
+                    )
+                    .frame(height: min(textEditorHeight, 170))
+                    .padding(.vertical, 8)
+                    
+                    Spacer()
+                    
+                    Button(action: onSubmit) {
+                        Image(systemName: "paperplane.fill")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 24, height: 24)
+                    }
+                    .disabled(text.isEmpty || userRating == 0)
+                }
+                .padding(.horizontal, 12)
+            }
+            .padding(.bottom, 8)
+        }
+        .padding(.horizontal)
+    }
+}
+
 
 // 별점 섹션
 private struct RatingSection: View {
@@ -298,7 +340,7 @@ private struct MovieTitleSection: View {
             if title.count < 15 {
                 HStack(alignment: .lastTextBaseline, spacing: 8) {
                     Text(title)
-                        .font(.pretendard(size: 44, family: .bold))
+                        .font(.pretendard(size: 34, family: .bold))
                         .lineLimit(1)
                     
                     HStack(spacing: 4) {

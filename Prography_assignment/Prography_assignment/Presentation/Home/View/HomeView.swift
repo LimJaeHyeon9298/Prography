@@ -21,7 +21,7 @@ struct HomeView: View {
         init(coordinator: HomeCoordinator,container: DIContainer, hideTabBar: Binding<Bool>) {
             self.coordinator = coordinator
             self._hideTabBar = hideTabBar
-            self._viewModel = StateObject(wrappedValue: container.makeMainViewModel())
+            self._viewModel = StateObject(wrappedValue: container.makeHomeViewModel())
 
         }
     
@@ -37,6 +37,7 @@ struct HomeView: View {
                         CarouselView(viewModel: viewModel)
                             .padding(.top, 10)
                             .frame(height: 200)
+                            .padding(.bottom, 30)
                         
                         // Section with Sticky Header and Content
                         Section(header:
@@ -48,6 +49,7 @@ struct HomeView: View {
                             MovieListSection(viewModel: viewModel, category: selectedTab == 0 ? .nowPlaying : (selectedTab == 1 ? .popular : .topRated))
                             
                         }
+                        
 
                     }
                 }
@@ -115,6 +117,40 @@ enum MovieCategory {
     case topRated
 }
 
+//struct MovieListSection: View {
+//    @ObservedObject var viewModel: HomeViewModel
+//    let category: MovieCategory
+//    
+//    var body: some View {
+//        switch category {
+//        case .nowPlaying:
+//            ForEach(viewModel.nowPlayingMovies?.movies ?? [], id: \.id) { movie in
+//                MovieRowView(movie: movie, viewModel: viewModel)
+//                    .frame(maxWidth: .infinity)
+//                    .padding(.horizontal)
+//            }
+//            .padding(.vertical)
+//        
+//        case .popular:
+//            ForEach(viewModel.popularMovies?.movies ?? [], id: \.id) { movie in
+//                MovieRowView(movie: movie, viewModel: viewModel)
+//                    .frame(maxWidth: .infinity)
+//                    .padding(.horizontal)
+//            }
+//            .padding(.vertical)
+//        
+//        case .topRated:
+//            ForEach(viewModel.topRatedMovies?.movies ?? [], id: \.id) { movie in
+//                MovieRowView(movie: movie, viewModel: viewModel)
+//                    .frame(maxWidth: .infinity)
+//                    .padding(.horizontal)
+//            }
+//            .padding(.vertical)
+//        }
+//    }
+//}
+
+
 struct MovieListSection: View {
     @ObservedObject var viewModel: HomeViewModel
     let category: MovieCategory
@@ -122,28 +158,59 @@ struct MovieListSection: View {
     var body: some View {
         switch category {
         case .nowPlaying:
-            ForEach(viewModel.nowPlayingMovies?.movies ?? [], id: \.id) { movie in
-                MovieRowView(movie: movie, viewModel: viewModel)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal)
-            }
-            .padding(.vertical)
-        
+            movieList(movies: viewModel.nowPlayingMovies?.movies ?? [])
+                .onAppear {
+                    viewModel.fetchMovies(category: .nowPlaying, page: 1)
+                }
         case .popular:
-            ForEach(viewModel.popularMovies?.movies ?? [], id: \.id) { movie in
-                MovieRowView(movie: movie, viewModel: viewModel)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal)
-            }
-            .padding(.vertical)
-        
+            movieList(movies: viewModel.popularMovies?.movies ?? [])
+                .onAppear {
+                    viewModel.fetchMovies(category: .popular, page: 1)
+                }
         case .topRated:
-            ForEach(viewModel.topRatedMovies?.movies ?? [], id: \.id) { movie in
-                MovieRowView(movie: movie, viewModel: viewModel)
-                    .frame(maxWidth: .infinity)
-                    .padding(.horizontal)
+            movieList(movies: viewModel.topRatedMovies?.movies ?? [])
+                .onAppear {
+                    viewModel.fetchMovies(category: .topRated, page: 1)
+                }
+        }
+    }
+    
+    private func movieList(movies: [MovieDomain]) -> some View {
+        ScrollView {
+            LazyVStack {
+                ForEach(movies, id: \.id) { movie in
+                    MovieRowView(movie: movie, viewModel: viewModel)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal)
+                }
+                
+                if !movies.isEmpty {
+                    nextPageLoadingView()
+                        .onAppear {
+                            loadNextPage()
+                        }
+                }
             }
             .padding(.vertical)
+        }
+    }
+    
+    private func nextPageLoadingView() -> some View {
+        HStack {
+            Spacer()
+            ProgressView()
+            Spacer()
+        }
+    }
+    
+    private func loadNextPage() {
+        switch category {
+        case .nowPlaying:
+            viewModel.fetchMovies(category: .nowPlaying, page: viewModel.nowPlayingCurrentPage)
+        case .popular:
+            viewModel.fetchMovies(category: .popular, page: viewModel.popularCurrentPage)
+        case .topRated:
+            viewModel.fetchMovies(category: .topRated, page: viewModel.topRatedCurrentPage)
         }
     }
 }

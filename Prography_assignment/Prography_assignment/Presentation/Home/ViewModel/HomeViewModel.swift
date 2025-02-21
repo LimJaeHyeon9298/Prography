@@ -27,7 +27,9 @@ class HomeViewModel: ObservableObject {
     @Published private(set) var isLoadingTopRated = false
       @Published private(set) var topRatedError: NetworkError?
     
-
+    @Published var isLoadingMoreNowPlaying = false
+    @Published var isLoadingMorePopular = false
+        @Published var isLoadingMoreTopRated = false
 
     private let selectedMovieSubject = PassthroughSubject<MovieDomain, Never>()
     var selectedMoviePublisher: AnyPublisher<MovieDomain, Never> {
@@ -35,15 +37,24 @@ class HomeViewModel: ObservableObject {
         }
 
     private var cancellables = Set<AnyCancellable>()
-    private var nowPlayingCurrentPage = 1
-    private var popularCurrentPage = 1
-    private var topRatedCurrentPage = 1
+     var nowPlayingCurrentPage = 1
+     var popularCurrentPage = 1
+     var topRatedCurrentPage = 1
     
 
     init(movieUseCase: NowPlayingUseCase) {
         self.movieUseCase = movieUseCase
     }
-
+    func fetchMovies(category: MovieCategory, page: Int) {
+            switch category {
+            case .nowPlaying:
+                fetchNowPlaying(page: page)
+            case .popular:
+                fetchPopular(page: page)
+            case .topRated:
+                fetchTopRated(page: page)
+            }
+        }
     
     func selectMovie(_ movie: MovieDomain) {
             selectedMovieSubject.send(movie)
@@ -56,12 +67,12 @@ class HomeViewModel: ObservableObject {
                }
                .store(in: &cancellables)
        }
-    func fetchNowPlaying() {
+    private func fetchNowPlaying(page: Int) {
         print("fetchNowPlaying 시작")
         isLoadingNowPlaying = true
         nowPlayingError = nil
         
-        movieUseCase.execute(page: nowPlayingCurrentPage, type: .nowPlaying)
+        movieUseCase.execute(page: page, type: .nowPlaying)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoadingNowPlaying = false
@@ -72,18 +83,22 @@ class HomeViewModel: ObservableObject {
                     break
                 }
             } receiveValue: { [weak self] movieList in
-                self?.nowPlayingMovies = movieList
-                self?.nowPlayingCurrentPage += 1
+                if page == 1 {
+                    self?.nowPlayingMovies = movieList
+                } else {
+                    self?.nowPlayingMovies?.movies.append(contentsOf: movieList.movies)
+                }
+                self?.nowPlayingCurrentPage = page + 1
             }
             .store(in: &cancellables)
     }
     
-    func fetchPopular() {
+    private func fetchPopular(page: Int) {
         print("fetchPopular 시작")
          isLoadingPopular = true
          popularError = nil
          
-        movieUseCase.execute(page: popularCurrentPage, type: .popular)
+        movieUseCase.execute(page: page, type: .popular)
              .receive(on: DispatchQueue.main)
              .sink { [weak self] completion in
                  print("popular completion: \(completion)")
@@ -97,56 +112,39 @@ class HomeViewModel: ObservableObject {
                  }
              } receiveValue: { [weak self] movieList in
                  print("popular 데이터 받음")
-                 self?.popularMovies = movieList
-                 self?.popularCurrentPage += 1
+                 if page == 1 {
+                     self?.popularMovies = movieList
+                 } else {
+                     self?.popularMovies?.movies.append(contentsOf: movieList.movies)
+                 }
+                 self?.popularCurrentPage = page + 1
              }
              .store(in: &cancellables)
      }
     
-    func fetchTopRated() {
-        movieUseCase.execute(page:topRatedCurrentPage,type: .topRated)
+    private func fetchTopRated(page: Int) {
+        movieUseCase.execute(page: page, type: .topRated)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 switch completion {
-                    
                 case .failure(let error):
                     self?.topRatedError = error
                     print("topRated error: \(error)")
                 case .finished:
                     break
-                
                 }
             } receiveValue: { [weak self] movieList in
-                self?.topRatedMovies = movieList
-                self?.topRatedCurrentPage += 1
+                if page == 1 {
+                    self?.topRatedMovies = movieList
+                } else {
+                    self?.topRatedMovies?.movies.append(contentsOf: movieList.movies)
+                }
+                self?.topRatedCurrentPage = page + 1
             }
             .store(in: &cancellables)
-
     }
      
-    
-    func loadMoreNowPlayingIfNeeded(currentItem movie: MovieDomain) {
-           guard let movies = nowPlayingMovies,
-                 !isLoadingNowPlaying,
-                 nowPlayingCurrentPage <= movies.totalPages,
-                 movies.movies.last?.id == movie.id else {
-               return
-           }
-           
-           fetchNowPlaying()
-       }
-       
-//    func loadMoreNowPlayingIfNeeded(currentItem movie: MovieDomain) {
-//        guard let movies = nowPlayingMovies,
-//              !isLoadingNowPlaying,
-//              nowPlayingCurrentPage <= movies.totalPages,
-//              movies.movies.last?.id == movie.id else {
-//            return
-//        }
-//        
-//        fetchNowPlaying()
-//    }
-    
+
     func retryNowPlaying() {
     //    fetchNowPlaying()
     }
@@ -157,9 +155,9 @@ class HomeViewModel: ObservableObject {
     
     func fetchInitialData() {
         print("fetchInitialData 호출됨")
-        fetchNowPlaying()
-        fetchPopular()
-        fetchTopRated()
+        fetchNowPlaying(page: 1)
+        fetchPopular(page: 1)
+        fetchTopRated(page: 1)
     }
 }
 

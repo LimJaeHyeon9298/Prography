@@ -65,7 +65,7 @@ enum MovieGenre: Int,CaseIterable {
 }
 
 struct MovieListDomain: Equatable {
-    let movies: [MovieDomain]
+    var movies: [MovieDomain]
     let currentPage: Int
     let totalPages: Int
     let totalResults: Int?

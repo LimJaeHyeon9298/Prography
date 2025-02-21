@@ -17,12 +17,12 @@ class DataManager {
     }
     
     // 리뷰 저장 함수
-    func saveReview(movieId: Int, rating: Int, comment: String,posterURL: String) throws {
+    func saveReview(movieId: Int,title:String, rating: Int, comment: String,posterURL: String) throws {
         guard let context = modelContext else {
             throw NSError(domain: "DataManager", code: -1, userInfo: [NSLocalizedDescriptionKey: "ModelContext not initialized"])
         }
         
-        let review = MovieReview(movieId: movieId, rating: rating, comment: comment,posterURL: posterURL)
+        let review = MovieReview(movieId: movieId,title: title, rating: rating, comment: comment,posterURL: posterURL)
         context.insert(review)
         
         try context.save()
@@ -78,6 +78,32 @@ class DataManager {
                try modelContext.save()
            }
        }
+    
+    func fetchAllReviews() throws -> [MovieReview] {
+        // 모든 MovieReview를 가져오는 기본 FetchDescriptor 생성
+        let descriptor = FetchDescriptor<MovieReview>()
+        
+        // 모든 리뷰를 최신순으로 정렬 (선택적)
+        let sortedDescriptor = FetchDescriptor<MovieReview>(
+            sortBy: [SortDescriptor(\.createdAt, order: .reverse)]
+        )
+        
+        // 모든 리뷰 가져오기
+        let reviews = try modelContext.fetch(sortedDescriptor)
+        
+        // 저장된 내용 출력 (옵션)
+        reviews.forEach { review in
+            print("Movie ID: \(review.movieId)")
+            print("Title: \(review.title)")
+            print("Rating: \(review.rating)")
+            print("Comment: \(review.comment)")
+            print("Created At: \(review.createdAt)")
+            print("PosterURL: \(review.posterURL)")
+            print("---------------")
+        }
+        
+        return reviews
+    }
 }
 
 

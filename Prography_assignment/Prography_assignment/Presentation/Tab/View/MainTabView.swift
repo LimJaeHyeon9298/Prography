@@ -12,6 +12,7 @@ struct MainTabView: View {
     @StateObject private var coordinator: MainCoordinator
     @State private var selectedTab: TabItem = .home
     @State private var hideTabBar: Bool = false
+    @State private var hideLogoBar: Bool = false
     
     init(container: DIContainer) {
         self.container = container
@@ -20,9 +21,7 @@ struct MainTabView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            
-
-                
+           
             ZStack(alignment: .bottom) {
                 switch selectedTab {
                 case .home:
@@ -43,10 +42,7 @@ struct MainTabView: View {
                         .ignoresSafeArea(.keyboard)
                         .safeAreaInset(edge: .bottom) {Color.clear.frame(height: 0)}
                 }
-                
-
             }
         }
-       
     }
 }

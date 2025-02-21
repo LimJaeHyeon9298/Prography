@@ -23,7 +23,10 @@ final class DIContainer {
    
    // MARK: - Coordinator Layer
    private var mainCoordinator: MainCoordinator?
-   
+    let reviewStore: ReviewStore
+    
+    
+    
    // MARK: - Initialization
    init(session: URLSession = .shared) {
        // Network Layer
@@ -38,21 +41,27 @@ final class DIContainer {
        // UseCase Layer
        self.movieUseCase = FetchNowPlayingMoviesUseCase(repository: movieRepository)
        self.movieDetailUseCase = MovieDetailUseCase(repository: movieDetailRepository)
+       
+       self.reviewStore = ReviewStore()
    }
    
    // MARK: - Factory Methods
    
    // ViewModel Factory
-   func makeMainViewModel() -> HomeViewModel {
+   func makeHomeViewModel() -> HomeViewModel {
        return HomeViewModel(movieUseCase: movieUseCase)
    }
    
    func makeDetailViewModel(movieId: Int) -> DetailViewModel {
        return DetailViewModel(
            movieId: movieId,
-           detailUseCase: movieDetailUseCase
+           detailUseCase: movieDetailUseCase, reviewStore: reviewStore
        )
    }
+    
+    func makeMyPageViewModel() -> MyPageViewModel {
+        return MyPageViewModel(dataManager: DataManager.shared)
+     }
    
    // Coordinator Factory
    func makeHomeCoordinator() -> HomeCoordinator {

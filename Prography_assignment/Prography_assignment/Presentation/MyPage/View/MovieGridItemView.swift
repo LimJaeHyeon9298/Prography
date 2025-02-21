@@ -47,7 +47,7 @@ struct MovieGridItemView: View {
             }
                         
             
-            Text("Movie \(movie.movieId)")
+            Text(movie.title)
                 .font(.caption)
                 .lineLimit(1)
             

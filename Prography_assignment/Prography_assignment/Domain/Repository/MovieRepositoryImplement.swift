@@ -30,7 +30,7 @@ struct MovieRepositoryImplement: MovieRepository {
         }
         
         let parameters = CommonQueryParameters(
-            language: "en-US",
+            language: "ko-KR",
             region: nil
         )
         
@@ -51,7 +51,7 @@ struct MovieRepositoryImplement: MovieRepository {
          }
          
          let parameters = CommonQueryParameters(
-             language: "en-US",
+             language: "ko-KR",
              region: nil
          )
         
@@ -73,7 +73,7 @@ struct MovieRepositoryImplement: MovieRepository {
          }
          
          let parameters = CommonQueryParameters(
-             language: "en-US",
+             language: "ko-KR",
              region: nil
          )
         
