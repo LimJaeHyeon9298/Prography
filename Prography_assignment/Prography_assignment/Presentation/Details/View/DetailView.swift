@@ -9,9 +9,9 @@ import SwiftUI
 import SwiftData
 
 struct DetailView: View {
-    let viewType: ViewType
     @State var text: String = ""
-    @Environment(\.modelContext) private var modelContext
+ //   @Environment(\.modelContext) private var modelContext
+    @StateObject var viewModel: DetailViewModel
     @Query private var reviews: [MovieReview]
     @State private var isEditMode = false
     @State private var textEditorHeight: CGFloat = 34
@@ -20,43 +20,18 @@ struct DetailView: View {
     @State private var isEditing = false
     @State private var userRating: Int = 0
     
-   
+    init(viewModel: DetailViewModel) {
+        _viewModel = StateObject(wrappedValue: viewModel)
+    }
     
-    enum ViewType {
-            case fromHome(MovieDomain)        // HomeView에서 접근할 때
-            case fromMyPage(DetailViewModel) // MyPage에서 접근할 때
-        }
-    
-    private var movie: MovieDomain {
-           switch viewType {
-           case .fromHome(let movieDomain):
-               return movieDomain
-           case .fromMyPage(let viewModel):
-               guard let detail = viewModel.movieDetail else {
-                   // 로딩 중일 때의 기본값
-                   return MovieDomain(id: 0, title: "", overview: "", posterURL: nil, releaseDate: Date(), rating: 0.0, genreIds: [])
-               }
-               // MovieDetailDomain -> MovieDomain 변환
-               return MovieDomain(
-                   id: detail.id,
-                   title: detail.title,
-                   overview: detail.overview,
-                   posterURL: detail.posterURL,
-                   releaseDate: Date(),
-                   rating: detail.rating,
-                   genreIds: detail.genres.compactMap { genre in
-                       MovieGenre.allCases.first(where: { $0.name == genre })?.rawValue
-                   }
-               )
-           }
-       }
+
     
     var body: some View {
         ScrollView {
             ZStack {
                 VStack(spacing: 0) {
                     // 포스터 이미지 영역
-                    PosterImageView(posterURL: movie.posterURL)
+                    PosterImageView(posterURL: viewModel.posterURL)
                         .frame(height: UIScreen.main.bounds.height * 0.35)
                     
                     // 별점 영역
@@ -66,17 +41,20 @@ struct DetailView: View {
                     // 컨텐츠 영역
                     VStack(alignment: .leading, spacing: 24) {
                         // 제목 영역
-                        MovieTitleSection(movie: movie)
+                        MovieTitleSection(
+                            title: viewModel.title,
+                            rating: viewModel.rating
+                        )
                         
                         // 장르 영역
-                        GenreSection(genreIds: movie.genreIds)
+                        GenreSection(genres: viewModel.genres)
                         
                         // 줄거리 영역
                         VStack(alignment: .leading, spacing: 12) {
                             Text("줄거리")
                                 .font(.pretendard(size: 18, family: .bold))
                             
-                            Text(movie.overview)
+                            Text(viewModel.overview)
                                 .font(.pretendard(size: 16, family: .regular))
                                 .lineSpacing(4)
                                 .foregroundColor(.black.opacity(0.8))
@@ -145,17 +123,14 @@ struct DetailView: View {
             }
            
             .onAppear {
+                viewModel.fetchMovieDetail()
                 setupKeyboardObservers()
             }
             .onDisappear {
                 removeKeyboardObservers()
             }
         }
-        .onAppear {
-                    if case .fromMyPage(let viewModel) = viewType {
-                        viewModel.fetchMovieDetail()
-                    }
-                }
+
         .background(Color.white)
         .toolbar(.hidden, for: .navigationBar)
     }
@@ -163,10 +138,10 @@ struct DetailView: View {
     private func addComment() {
            do {
                try DataManager.shared.saveReview(
-                   movieId: movie.id,
-                   rating: userRating,
-                   comment: text,
-                   posterURL: movie.posterURL?.absoluteString ?? ""
+                    movieId: viewModel.movieId,
+                    rating: userRating,
+                    comment: text,
+                    posterURL: viewModel.posterURL?.absoluteString ?? ""
                )
                text = ""
                userRating = 0
@@ -226,23 +201,21 @@ private struct RatingSection: View {
 
 // 장르 섹션
 private struct GenreSection: View {
-    let genreIds: [Int]
+    let genres: [String]  // API에서 받아온 장르 이름들
     
     var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                ForEach(genreIds, id: \.self) { genreId in
-                    if let genre = MovieGenre(rawValue: genreId) {
-                        Text(genre.name)
-                            .font(.pretendard(size: 14, family: .medium))
-                            .foregroundColor(.black)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                Capsule()
-                                    .stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            )
-                    }
+                ForEach(genres, id: \.self) { genre in
+                    Text(genre)
+                        .font(.pretendard(size: 14, family: .medium))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
                 }
             }
         }
@@ -251,24 +224,27 @@ private struct GenreSection: View {
 
 // 컨텐츠 영역
 private struct DetailContent: View {
-    let movie: MovieDomain
+    @ObservedObject var viewModel: DetailViewModel
     @Binding var text: String
     
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 24) {
                 // 제목 영역
-                MovieTitleSection(movie: movie)
+                MovieTitleSection(
+                    title: viewModel.title,
+                    rating: viewModel.rating
+                )
                 
                 // 장르 영역
-                GenreSection(genreIds: movie.genreIds)
+                GenreSection(genres: viewModel.genres)
                 
                 // 줄거리 영역
                 VStack(alignment: .leading, spacing: 12) {
                     Text("줄거리")
                         .font(.pretendard(size: 18, family: .bold))
                     
-                    Text(movie.overview)
+                    Text(viewModel.overview)
                         .font(.pretendard(size: 16, family: .regular))
                         .lineSpacing(4)
                         .foregroundColor(.black.opacity(0.8))
@@ -300,32 +276,33 @@ private struct DetailContent: View {
 
 // 제목 섹션
 private struct MovieTitleSection: View {
-    let movie: MovieDomain
-    
+    let title: String
+    let rating: Double
+
     var body: some View {
         Group {
-            if movie.title.count < 15 {
+            if title.count < 15 {
                 HStack(alignment: .lastTextBaseline, spacing: 8) {
-                    Text(movie.title)
+                    Text(title)
                         .font(.pretendard(size: 44, family: .bold))
                         .lineLimit(1)
                     
                     HStack(spacing: 4) {
                         Text("/")
                             .font(.pretendard(size: 24, family: .medium))
-                        Text(String(format: "%.1f", movie.rating))
+                        Text(String(format: "%.1f",rating))
                             .font(.pretendard(size: 16, family: .bold))
                     }
                 }
             } else {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(movie.title)
+                    Text(title)
                         .font(.pretendard(size: 44, family: .bold))
                         .lineLimit(2)
                         .minimumScaleFactor(0.7)
                     
                     HStack(spacing: 4) {
-                        Text(String(format: "%.1f", movie.rating))
+                        Text(String(format: "%.1f", rating))
                             .font(.pretendard(size: 16, family: .bold))
                         Text("/")
                             .font(.pretendard(size: 16, family: .medium))

@@ -11,58 +11,11 @@ struct Movies {
 
 }
 
-struct MovieDomain: Equatable,Hashable {
-    let id: Int
-    let title: String
-    let overview: String
-    let posterURL: URL?
-    let releaseDate: Date
-    let rating: Double
-    let genreIds: [Int]
-}
-
-struct MovieListDomain: Equatable {
-    let movies: [MovieDomain]
-    let currentPage: Int
-    let totalPages: Int
-    let availableDateRange: DateRange
-}
-
 struct DateRange: Equatable {
     let from: Date
     let to: Date
 }
 
-
-struct PopularMovieListDomain: Equatable {
-    let movies: [MovieDomain]
-    let currentPage: Int
-    let totalPages: Int
-}
-
-struct TopRatedMovieListDomain: Equatable {
-    let page: Int
-    let movies: [TopRatedMovieDomain]
-    let totalPages: Int
-    let totalResults: Int
-}
-
-struct TopRatedMovieDomain: Equatable {
-    let id: Int
-    let title: String
-    let originalTitle: String
-    let overview: String
-    let posterPath: String?
-    let backdropPath: String?
-    let releaseDate: String
-    let voteAverage: Double
-    let voteCount: Int
-    let popularity: Double
-    let genreIds: [Int]
-    let originalLanguage: String
-    let adult: Bool
-    let video: Bool
-}
 
 
 enum MovieGenre: Int,CaseIterable {
@@ -111,11 +64,136 @@ enum MovieGenre: Int,CaseIterable {
     }
 }
 
-struct MovieDetailDomain: Equatable {
+struct MovieListDomain: Equatable {
+    let movies: [MovieDomain]
+    let currentPage: Int
+    let totalPages: Int
+    let totalResults: Int?
+    let availableDateRange: DateRange?
+}
+
+//struct MovieDomain: Equatable, Hashable {
+//    let id: Int
+//    let title: String
+//    let originalTitle: String?
+//    let overview: String
+//    let posterPath: String?
+//    let backdropPath: String?
+//    let releaseDate: Date?
+//    let rating: Double
+//    let voteCount: Int?
+//    let popularity: Double?
+//    let genreIds: [Int]
+//    let originalLanguage: String?
+//    let adult: Bool?
+//    let video: Bool?
+//    
+//    // Computed properties for convenience
+//    var posterURL: URL? {
+//        guard let posterPath = posterPath else { return nil }
+//        return URL(string: "https://image.tmdb.org/t/p/w500\(posterPath)")
+//    }
+//    
+//    // Genre mapping convenience method
+//    func getGenreNames() -> [String] {
+//        return genreIds.compactMap { genreId in
+//            MovieGenre(rawValue: genreId)?.name
+//        }
+//    }
+//}
+struct MovieDomain: Equatable, Hashable {
     let id: Int
     let title: String
+    let originalTitle: String?
     let overview: String
     let posterURL: URL?
+    let backdropURL: URL?
+    let releaseDate: Date?
     let rating: Double
-    let genres: [String]  // 장르 이름만 배열로 저장
+    let voteCount: Int?
+    let popularity: Double?
+    let genreIds: [Int]
+    let originalLanguage: String?
+    let adult: Bool?
+    let video: Bool?
+    
+    // Computed properties for URLs
+    init(
+        id: Int,
+        title: String,
+        originalTitle: String?,
+        overview: String,
+        posterPath: String?,
+        backdropPath: String?,
+        releaseDate: Date?,
+        rating: Double,
+        voteCount: Int?,
+        popularity: Double?,
+        genreIds: [Int],
+        originalLanguage: String?,
+        adult: Bool?,
+        video: Bool?
+    ) {
+        self.id = id
+        self.title = title
+        self.originalTitle = originalTitle
+        self.overview = overview
+        self.posterURL = posterPath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500/\($0)") }
+        self.backdropURL = backdropPath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500/\($0)") }
+        self.releaseDate = releaseDate
+        self.rating = rating
+        self.voteCount = voteCount
+        self.popularity = popularity
+        self.genreIds = genreIds
+        self.originalLanguage = originalLanguage
+        self.adult = adult
+        self.video = video
+    }
+}
+
+
+struct MovieDetailDomain {
+    let id: Int
+    let title: String
+    let originalTitle: String
+    let overview: String
+    let posterPath: String?
+    let backdropPath: String?
+    let releaseDate: Date?
+    let rating: Double
+    let voteCount: Int
+    let runtime: Int?
+    let status: String
+    let tagline: String?
+    let popularity: Double
+    let genres: [GenreDomain]
+    let productionCompanies: [ProductionCompanyDomain]
+    let productionCountries: [ProductionCountryDomain]
+    
+    var posterURL: URL? {
+        guard let posterPath = posterPath else { return nil }
+        return URL(string: "https://image.tmdb.org/t/p/w500\(posterPath)")
+    }
+    
+    var backdropURL: URL? {
+        guard let backdropPath = backdropPath else { return nil }
+        return URL(string: "https://image.tmdb.org/t/p/original\(backdropPath)")
+    }
+}
+
+struct GenreDomain {
+    let id: Int
+    let name: String
+}
+
+struct ProductionCompanyDomain {
+    let id: Int
+    let name: String
+    let logoPath: String?
+    let originCountry: String
+}
+
+struct ProductionCountryDomain {
+    let iso3166_1: String
+    let name: String
 }

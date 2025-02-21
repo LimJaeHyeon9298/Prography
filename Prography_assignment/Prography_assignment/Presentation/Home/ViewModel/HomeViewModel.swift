@@ -10,37 +10,40 @@ import Combine
 
 
 class HomeViewModel: ObservableObject {
+    private let movieUseCase: NowPlayingUseCase
 
+    // Now Playing Movies
     @Published private(set) var nowPlayingMovies: MovieListDomain?
     @Published private(set) var isLoadingNowPlaying = false
-    @Published private(set) var isLoadingPopular = false
     @Published private(set) var nowPlayingError: NetworkError?
+       
+    // Popular Movies
+    @Published private(set) var popularMovies: MovieListDomain?
+    @Published private(set) var isLoadingPopular = false
     @Published private(set) var popularError: NetworkError?
-    @Published private(set) var topRatedError: NetworkError?
-    @Published private(set) var popularMovies: PopularMovieListDomain?
-    @Published private(set) var topRatedMovies: TopRatedMovieListDomain?
+       
+    // Top Rated Movies
+    @Published private(set) var topRatedMovies: MovieListDomain?
+    @Published private(set) var isLoadingTopRated = false
+      @Published private(set) var topRatedError: NetworkError?
     
+
+
     private let selectedMovieSubject = PassthroughSubject<MovieDomain, Never>()
     var selectedMoviePublisher: AnyPublisher<MovieDomain, Never> {
             selectedMovieSubject.eraseToAnyPublisher()
         }
-    
-    private let nowPlayingUseCase: FetchNowPlayingMoviesUseCase
-    private let popularUseCase: PopularMovieUseCase
-    private let topRatedUseCase: TopRatedMovieUseCase
+
     private var cancellables = Set<AnyCancellable>()
     private var nowPlayingCurrentPage = 1
     private var popularCurrentPage = 1
     private var topRatedCurrentPage = 1
     
 
-    init(nowPlayingUseCase: FetchNowPlayingMoviesUseCase,
-         popularUseCase: PopularMovieUseCase,
-         topRatedUseCase: TopRatedMovieUseCase) {
-        self.nowPlayingUseCase = nowPlayingUseCase
-        self.popularUseCase = popularUseCase
-        self.topRatedUseCase = topRatedUseCase
+    init(movieUseCase: NowPlayingUseCase) {
+        self.movieUseCase = movieUseCase
     }
+
     
     func selectMovie(_ movie: MovieDomain) {
             selectedMovieSubject.send(movie)
@@ -58,7 +61,7 @@ class HomeViewModel: ObservableObject {
         isLoadingNowPlaying = true
         nowPlayingError = nil
         
-        nowPlayingUseCase.execute(page: nowPlayingCurrentPage)
+        movieUseCase.execute(page: nowPlayingCurrentPage, type: .nowPlaying)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoadingNowPlaying = false
@@ -75,51 +78,51 @@ class HomeViewModel: ObservableObject {
             .store(in: &cancellables)
     }
     
-    func fetchPopular() {
-        print("fetchPopular 시작")
-         isLoadingPopular = true
-         popularError = nil
-         
-         popularUseCase.execute(page: popularCurrentPage)
-             .receive(on: DispatchQueue.main)
-             .sink { [weak self] completion in
-                 print("popular completion: \(completion)")
-                 self?.isLoadingPopular = false
-                 switch completion {
-                 case .failure(let error):
-                     self?.popularError = error
-                     print("popular error: \(error)")
-                 case .finished:
-                     break
-                 }
-             } receiveValue: { [weak self] movieList in
-                 print("popular 데이터 받음")
-                 self?.popularMovies = movieList
-                 self?.popularCurrentPage += 1
-             }
-             .store(in: &cancellables)
-     }
+//    func fetchPopular() {
+//        print("fetchPopular 시작")
+//         isLoadingPopular = true
+//         popularError = nil
+//         
+//         popularUseCase.execute(page: popularCurrentPage)
+//             .receive(on: DispatchQueue.main)
+//             .sink { [weak self] completion in
+//                 print("popular completion: \(completion)")
+//                 self?.isLoadingPopular = false
+//                 switch completion {
+//                 case .failure(let error):
+//                     self?.popularError = error
+//                     print("popular error: \(error)")
+//                 case .finished:
+//                     break
+//                 }
+//             } receiveValue: { [weak self] movieList in
+//                 print("popular 데이터 받음")
+//                 self?.popularMovies = movieList
+//                 self?.popularCurrentPage += 1
+//             }
+//             .store(in: &cancellables)
+//     }
     
-    func fetchTopRated() {
-        topRatedUseCase.execute(page:topRatedCurrentPage)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                switch completion {
-                    
-                case .failure(let error):
-                    self?.topRatedError = error
-                    print("topRated error: \(error)")
-                case .finished:
-                    break
-                
-                }
-            } receiveValue: { [weak self] movieList in
-                self?.topRatedMovies = movieList
-                self?.topRatedCurrentPage += 1
-            }
-            .store(in: &cancellables)
-
-    }
+//    func fetchTopRated() {
+//        topRatedUseCase.execute(page:topRatedCurrentPage)
+//            .receive(on: DispatchQueue.main)
+//            .sink { [weak self] completion in
+//                switch completion {
+//                    
+//                case .failure(let error):
+//                    self?.topRatedError = error
+//                    print("topRated error: \(error)")
+//                case .finished:
+//                    break
+//                
+//                }
+//            } receiveValue: { [weak self] movieList in
+//                self?.topRatedMovies = movieList
+//                self?.topRatedCurrentPage += 1
+//            }
+//            .store(in: &cancellables)
+//
+//    }
      
     
     func loadMoreNowPlayingIfNeeded(currentItem movie: MovieDomain) {
@@ -130,33 +133,33 @@ class HomeViewModel: ObservableObject {
                return
            }
            
-           fetchNowPlaying()
+         //  fetchNowPlaying()
        }
        
-    func loadMorePopularIfNeeded(currentItem movie: MovieDomain) {
-           guard let movies = popularMovies,
-                 !isLoadingPopular,
-                 popularCurrentPage <= movies.totalPages,
-                 movies.movies.last?.id == movie.id else {
-               return
-           }
-           
-           fetchPopular()
-       }
+//    func loadMorePopularIfNeeded(currentItem movie: MovieDomain) {
+//           guard let movies = popularMovies,
+//                 !isLoadingPopular,
+//                 popularCurrentPage <= movies.totalPages,
+//                 movies.movies.last?.id == movie.id else {
+//               return
+//           }
+//           
+//       //    fetchPopular()
+//       }
     
     func retryNowPlaying() {
-        fetchNowPlaying()
+    //    fetchNowPlaying()
     }
         
     func retryPopular() {
-        fetchPopular()
+    //    fetchPopular()
     }
     
     func fetchInitialData() {
         print("fetchInitialData 호출됨")
         fetchNowPlaying()
-        fetchPopular()
-        fetchTopRated()
+//        fetchPopular()
+//        fetchTopRated()
     }
 }
 

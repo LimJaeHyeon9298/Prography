@@ -15,20 +15,11 @@ protocol NetworkServiceProtocol {
                               environment:Environment) -> AnyPublisher<T, NetworkError>
 }
 
-protocol URLSessionProtocol {
-    func dataTaskPublisher(for request: URLRequest) -> AnyPublisher<(Data, URLResponse), Error>
-}
 
-extension URLSession: URLSessionProtocol {
-    func dataTaskPublisher(for request: URLRequest) -> AnyPublisher<(Data, URLResponse), Error> {
-        return self.dataTaskPublisher(for: request)
-            .mapError { $0 as Error }
-            .eraseToAnyPublisher()
-    }
-}
+
 
 struct NetworkService: NetworkServiceProtocol {
-    private let session: URLSessionProtocol
+    private let session: URLSession
     private let logger: NetworkLogging
     private let timeoutInterval: TimeInterval
     

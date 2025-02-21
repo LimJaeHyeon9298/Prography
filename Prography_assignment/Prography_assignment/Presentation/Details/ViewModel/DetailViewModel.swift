@@ -9,8 +9,8 @@ import SwiftUI
 import Combine
 
 class DetailViewModel: ObservableObject {
-    private let movieId: Int
-    private let useCase: MovieDetailUseCaseProtocol
+     let movieId: Int
+    private let detailUseCase: MovieDetailUseCaseProtocol
     private var cancellables = Set<AnyCancellable>()
     
     // Published 프로퍼티
@@ -18,16 +18,16 @@ class DetailViewModel: ObservableObject {
     @Published private(set) var isLoading = false
     @Published private(set) var error: NetworkError?
     
-    init(movieId: Int, useCase: MovieDetailUseCaseProtocol) {
+    init(movieId: Int, detailUseCase: MovieDetailUseCaseProtocol) {
         self.movieId = movieId
-        self.useCase = useCase
+        self.detailUseCase = detailUseCase
     }
     
     func fetchMovieDetail() {
         isLoading = true
         error = nil
         
-        useCase.execute(movieId: movieId)
+        detailUseCase.execute(movieId: movieId)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
                 self?.isLoading = false
@@ -61,6 +61,6 @@ class DetailViewModel: ObservableObject {
     }
     
     var genres: [String] {
-        movieDetail?.genres ?? []
+        return movieDetail?.genres.map { $0.name } ?? []
     }
 }

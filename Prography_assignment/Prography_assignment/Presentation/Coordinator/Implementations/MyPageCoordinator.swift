@@ -11,12 +11,13 @@ class MyPageCoordinator: CoordinatorProtocol {
     typealias Route = MyPageRoute
     
     @Published var navigationPath: NavigationPath = NavigationPath()
+    private let container: DIContainer
+   
     
-    private let detailUseCase: MovieDetailUseCaseProtocol
        
-       init(detailUseCase: MovieDetailUseCaseProtocol) {
-           self.detailUseCase = detailUseCase
-       }
+    init(container: DIContainer) {
+            self.container = container
+        }
     
     func navigate(to route: MyPageRoute) {
         switch route {
@@ -33,9 +34,9 @@ class MyPageCoordinator: CoordinatorProtocol {
     func view(for route:MyPageRoute) -> some View {
         switch route {
         case .detail(let movieId):
-            let viewModel = DetailViewModel(movieId: movieId, useCase: detailUseCase)
-                    DetailView(viewType: .fromMyPage(viewModel))
-                        .toolbar(.hidden, for: .navigationBar)
+            let viewModel = container.makeDetailViewModel(movieId: movieId)
+            DetailView(viewModel: viewModel)
+                .navigationBarHidden(true)
         case .settings:
             EmptyView()
         case .profile:

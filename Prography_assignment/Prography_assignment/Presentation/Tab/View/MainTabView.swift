@@ -8,12 +8,14 @@
 import SwiftUI
 
 struct MainTabView: View {
+    private let container: DIContainer
     @StateObject private var coordinator: MainCoordinator
     @State private var selectedTab: TabItem = .home
     @State private var hideTabBar: Bool = false
     
-    init() {
-        _coordinator = StateObject(wrappedValue: MainCoordinator())
+    init(container: DIContainer) {
+        self.container = container
+        _coordinator = StateObject(wrappedValue: container.makeMainCoordinator())
     }
     
     var body: some View {
@@ -25,7 +27,9 @@ struct MainTabView: View {
             ZStack(alignment: .bottom) {
                 switch selectedTab {
                 case .home:
-                    HomeView(coordinator: coordinator.homeCoordinator, hideTabBar: $hideTabBar)
+                    HomeView(coordinator: coordinator.homeCoordinator,
+                             container: container,
+                             hideTabBar: $hideTabBar)
                         .ignoresSafeArea()
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
                 case .myPage:

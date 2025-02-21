@@ -7,23 +7,39 @@
 
 import Combine
 
-protocol NowPlayingUseCaseImpl {
-    func execute(page:Int) -> AnyPublisher<MovieListDomain, NetworkError>
-}
+    enum MovieListType {
+        case nowPlaying
+        case popular
+        case topRated
+    }
 
-class FetchNowPlayingMoviesUseCase: NowPlayingUseCaseImpl {
-    
-    init(repository: MovieRepository) {
-        self.repository = repository
+    protocol NowPlayingUseCase {
+        func execute(page: Int, type: MovieListType) -> AnyPublisher<MovieListDomain, NetworkError>
     }
-    
-    private let repository: MovieRepository
-    
-    func execute(page: Int) -> AnyPublisher<MovieListDomain, NetworkError> {
-        return repository.fetchNowPlaying(page: page)
-            .mapError { $0 as NetworkError }
-            .eraseToAnyPublisher()
+
+    class FetchNowPlayingMoviesUseCase: NowPlayingUseCase {
+        private let repository: MovieRepository
+        init(repository: MovieRepository) {
+            self.repository = repository
+        }
+        
+    //    private let repository: MovieRepositoryImplement
+    //    
+        func execute(page: Int, type: MovieListType) -> AnyPublisher<MovieListDomain, NetworkError> {
+            switch type {
+            case .nowPlaying:
+                return repository.fetchNowPlaying(page: page)
+                    .mapError { $0 as NetworkError }
+                    .eraseToAnyPublisher()
+            case .popular:
+                return repository.fetchNowPlaying(page: page)
+                    .mapError { $0 as NetworkError }
+                    .eraseToAnyPublisher()
+            case .topRated:
+                return repository.fetchNowPlaying(page: page)
+                    .mapError { $0 as NetworkError }
+                    .eraseToAnyPublisher()
+            }
+        }
+
     }
-    
-    
-}

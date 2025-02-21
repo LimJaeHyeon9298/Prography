@@ -11,11 +11,11 @@ class HomeCoordinator: CoordinatorProtocol {
     typealias Route = HomeRoute
     
     @Published var navigationPath: NavigationPath = NavigationPath()
-    private let detailUseCase: MovieDetailUseCaseProtocol
+    private let container: DIContainer
     
-    init(detailUseCase: MovieDetailUseCaseProtocol) {
-        self.detailUseCase = detailUseCase
-    }
+    init(container: DIContainer) {
+           self.container = container
+       }
     
     func navigate(to route: HomeRoute) {
         switch route {
@@ -32,8 +32,10 @@ class HomeCoordinator: CoordinatorProtocol {
     func view(for route: HomeRoute) -> some View {
         switch route {
         case .detail(let movie):
-            DetailView(viewType: .fromHome(movie))
-                .toolbar(.hidden, for: .navigationBar)
+            let viewModel = container.makeDetailViewModel(movieId: movie.id)
+                        DetailView(viewModel: viewModel)
+                           .navigationBarHidden(true)
+
         case .search:
             EmptyView()
         case .filter:

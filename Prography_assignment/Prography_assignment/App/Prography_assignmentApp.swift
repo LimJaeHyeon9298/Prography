@@ -10,6 +10,8 @@ import SwiftData
 
 @main
 struct Prography_assignmentApp: App {
+    
+    let container = DIContainer()
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             MovieReview.self,
@@ -31,7 +33,7 @@ struct Prography_assignmentApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            MainTabView(container: container)
         }
         .modelContainer(sharedModelContainer)
     }
