@@ -133,19 +133,19 @@ class HomeViewModel: ObservableObject {
                return
            }
            
-         //  fetchNowPlaying()
+           fetchNowPlaying()
        }
        
-//    func loadMorePopularIfNeeded(currentItem movie: MovieDomain) {
-//           guard let movies = popularMovies,
-//                 !isLoadingPopular,
-//                 popularCurrentPage <= movies.totalPages,
-//                 movies.movies.last?.id == movie.id else {
-//               return
-//           }
-//           
-//       //    fetchPopular()
-//       }
+//    func loadMoreNowPlayingIfNeeded(currentItem movie: MovieDomain) {
+//        guard let movies = nowPlayingMovies,
+//              !isLoadingNowPlaying,
+//              nowPlayingCurrentPage <= movies.totalPages,
+//              movies.movies.last?.id == movie.id else {
+//            return
+//        }
+//        
+//        fetchNowPlaying()
+//    }
     
     func retryNowPlaying() {
     //    fetchNowPlaying()

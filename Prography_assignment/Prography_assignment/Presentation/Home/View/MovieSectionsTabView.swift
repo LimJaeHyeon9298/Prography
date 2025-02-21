@@ -125,23 +125,52 @@ struct MovieRowView: View {
                     Text(movie.title)
                         .font(.pretendard(size: 18, family: .bold))
                         .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .truncationMode(.tail)
                     
                     Text(movie.overview)
                         .font(.pretendard(size: 14, family: .regular))
                         .foregroundColor(.gray)
-                        .lineLimit(3)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .truncationMode(.tail)
                     
                     HStack {
-                        Image(systemName: "star.fill")
-                            .foregroundColor(.yellow)
                         Text(String(format: "%.1f", movie.rating))
                             .font(.pretendard(size: 14, family: .medium))
+                        
+                        Spacer()
                     }
+                    GenreSection(genres: movie.getGenreNames())
                 }
                 
-                Spacer()
+          
             }
+            .frame(maxWidth: .infinity, alignment: .leading)
+           
         }
         .foregroundColor(.primary)
+    }
+}
+
+private struct GenreSection: View {
+    let genres: [String]
+    
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(genres, id: \.self) { genre in
+                    Text(genre)
+                        .font(.pretendard(size: 12, family: .medium))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule()
+                                .stroke(Color.gray.opacity(0.3), lineWidth: 1)
+                        )
+                }
+            }
+        }
     }
 }

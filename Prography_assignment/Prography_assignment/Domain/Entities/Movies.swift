@@ -197,3 +197,12 @@ struct ProductionCountryDomain {
     let iso3166_1: String
     let name: String
 }
+
+
+extension MovieDomain {
+    func getGenreNames() -> [String] {
+        return genreIds.compactMap { genreId in
+            MovieGenre(rawValue: genreId)?.name
+        }
+    }
+}
