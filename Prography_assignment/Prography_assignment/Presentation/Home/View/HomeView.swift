@@ -117,100 +117,82 @@ enum MovieCategory {
     case topRated
 }
 
-//struct MovieListSection: View {
-//    @ObservedObject var viewModel: HomeViewModel
-//    let category: MovieCategory
-//    
-//    var body: some View {
-//        switch category {
-//        case .nowPlaying:
-//            ForEach(viewModel.nowPlayingMovies?.movies ?? [], id: \.id) { movie in
-//                MovieRowView(movie: movie, viewModel: viewModel)
-//                    .frame(maxWidth: .infinity)
-//                    .padding(.horizontal)
-//            }
-//            .padding(.vertical)
-//        
-//        case .popular:
-//            ForEach(viewModel.popularMovies?.movies ?? [], id: \.id) { movie in
-//                MovieRowView(movie: movie, viewModel: viewModel)
-//                    .frame(maxWidth: .infinity)
-//                    .padding(.horizontal)
-//            }
-//            .padding(.vertical)
-//        
-//        case .topRated:
-//            ForEach(viewModel.topRatedMovies?.movies ?? [], id: \.id) { movie in
-//                MovieRowView(movie: movie, viewModel: viewModel)
-//                    .frame(maxWidth: .infinity)
-//                    .padding(.horizontal)
-//            }
-//            .padding(.vertical)
-//        }
-//    }
-//}
-
 
 struct MovieListSection: View {
     @ObservedObject var viewModel: HomeViewModel
     let category: MovieCategory
     
     var body: some View {
-        switch category {
-        case .nowPlaying:
-            movieList(movies: viewModel.nowPlayingMovies?.movies ?? [])
-                .onAppear {
-                    viewModel.fetchMovies(category: .nowPlaying, page: 1)
-                }
-        case .popular:
-            movieList(movies: viewModel.popularMovies?.movies ?? [])
-                .onAppear {
-                    viewModel.fetchMovies(category: .popular, page: 1)
-                }
-        case .topRated:
-            movieList(movies: viewModel.topRatedMovies?.movies ?? [])
-                .onAppear {
-                    viewModel.fetchMovies(category: .topRated, page: 1)
-                }
-        }
-    }
-    
-    private func movieList(movies: [MovieDomain]) -> some View {
         ScrollView {
-            LazyVStack {
-                ForEach(movies, id: \.id) { movie in
-                    MovieRowView(movie: movie, viewModel: viewModel)
-                        .frame(maxWidth: .infinity)
-                        .padding(.horizontal)
-                }
-                
-                if !movies.isEmpty {
-                    nextPageLoadingView()
+            LazyVStack(spacing: 16) {
+                if let movies = moviesForCategory(), !movies.isEmpty {
+                    // ID를 더 고유하게 만들기 위해 인덱스와 조합
+                    ForEach(Array(zip(movies.indices, movies)), id: \.0) { index, movie in
+                        MovieRowView(movie: movie, viewModel: viewModel)
+                            .frame(maxWidth: .infinity)
+                            .padding(.horizontal)
+                            // 고유한 ID 할당
+                            .id("\(category)-\(movie.id)-\(index)")
+                    }
+                    
+                    ProgressView()
                         .onAppear {
                             loadNextPage()
                         }
+                } else if isLoadingForCategory() {
+                    ProgressView()
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                } else {
+                    Text("데이터를 불러올 수 없습니다.")
+                        .frame(maxWidth: .infinity)
+                        .padding()
                 }
             }
             .padding(.vertical)
         }
     }
     
-    private func nextPageLoadingView() -> some View {
-        HStack {
-            Spacer()
-            ProgressView()
-            Spacer()
+    // 카테고리별 영화 데이터 가져오기
+    private func moviesForCategory() -> [MovieDomain]? {
+        switch category {
+        case .nowPlaying:
+            return viewModel.nowPlayingMovies?.movies
+        case .popular:
+            return viewModel.popularMovies?.movies
+        case .topRated:
+            return viewModel.topRatedMovies?.movies
+        }
+    }
+    
+    // 카테고리별 로딩 상태 확인
+    private func isLoadingForCategory() -> Bool {
+        switch category {
+        case .nowPlaying:
+            return viewModel.isLoadingNowPlaying
+        case .popular:
+            return viewModel.isLoadingPopular
+        case .topRated:
+            return viewModel.isLoadingTopRated
         }
     }
     
     private func loadNextPage() {
         switch category {
         case .nowPlaying:
-            viewModel.fetchMovies(category: .nowPlaying, page: viewModel.nowPlayingCurrentPage)
+            if !viewModel.isLoadingMoreNowPlaying {
+                viewModel.fetchMovies(category: .nowPlaying, page: viewModel.nowPlayingCurrentPage)
+            }
         case .popular:
-            viewModel.fetchMovies(category: .popular, page: viewModel.popularCurrentPage)
+            if !viewModel.isLoadingMorePopular {
+                viewModel.fetchMovies(category: .popular, page: viewModel.popularCurrentPage)
+            }
         case .topRated:
-            viewModel.fetchMovies(category: .topRated, page: viewModel.topRatedCurrentPage)
+            if !viewModel.isLoadingMoreTopRated {
+                viewModel.fetchMovies(category: .topRated, page: viewModel.topRatedCurrentPage)
+            }
         }
     }
+    
+    // 나머지 메서드들...
 }

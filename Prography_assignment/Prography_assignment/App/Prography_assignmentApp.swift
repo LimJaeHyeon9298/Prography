@@ -10,7 +10,8 @@ import SwiftData
 
 @main
 struct Prography_assignmentApp: App {
-    
+    @State var isSplashView = true
+    @State var showSplash = true
     let container = DIContainer()
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -33,8 +34,28 @@ struct Prography_assignmentApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView(container: container)
+            if isSplashView {
+                LaunchScreenView()
+                    .ignoresSafeArea()
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 3) {
+                            isSplashView = false
+                        }
+                    }
+            } else {
+                MainTabView(container: container)
+            }
+           
         }
         .modelContainer(sharedModelContainer)
     }
+}
+
+struct LaunchScreenView: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let controller = UIStoryboard(name: "Launch Screen", bundle: nil).instantiateInitialViewController()!
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
 }
