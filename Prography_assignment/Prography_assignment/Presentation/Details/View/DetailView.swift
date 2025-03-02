@@ -382,15 +382,15 @@ struct PosterImageView: View {
                 
                 // 포스터 이미지
                 if let posterURL = posterURL {
-                    AsyncImage(url: posterURL) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: geometry.size.width * 0.7)
-                            .frame(maxWidth: .infinity)
-                    } placeholder: {
+                    CachedAsyncImage(
+                        url: posterURL,
+                        targetSize: CGSize(width: geometry.size.width * 0.7, height: geometry.size.height)
+                    ) {
                         defaultBackground(geometry: geometry)
                     }
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: geometry.size.width * 0.7)
+                    .frame(maxWidth: .infinity)
                 } else {
                     defaultBackground(geometry: geometry)
                 }

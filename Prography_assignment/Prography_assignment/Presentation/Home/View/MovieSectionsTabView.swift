@@ -121,18 +121,31 @@ struct MovieRowView: View {
         }) {
             HStack(spacing: 16) {
                 // Poster Image
-                AsyncImage(url: movie.posterURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                        )
-                }
+//                AsyncImage(url: movie.posterURL) { image in
+//                    image
+//                        .resizable()
+//                        .aspectRatio(contentMode: .fill)
+//                } placeholder: {
+//                    Rectangle()
+//                        .fill(Color.gray.opacity(0.3))
+//                        .overlay(
+//                            ProgressView()
+//                                .progressViewStyle(CircularProgressViewStyle())
+//                        )
+//                }
+                
+                
+                CachedAsyncImage(
+                     url: movie.posterURL,
+                     targetSize: CGSize(width: 100, height: 150)
+                 ) {
+                     Rectangle()
+                         .fill(Color.gray.opacity(0.3))
+                         .overlay(
+                             ProgressView()
+                                 .progressViewStyle(CircularProgressViewStyle())
+                         )
+                 }
                 .frame(width: 100, height: 150)
                 .cornerRadius(8)
                 

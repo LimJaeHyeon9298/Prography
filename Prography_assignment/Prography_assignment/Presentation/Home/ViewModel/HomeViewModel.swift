@@ -29,7 +29,9 @@ class HomeViewModel: ObservableObject {
     
     @Published var isLoadingMoreNowPlaying = false
     @Published var isLoadingMorePopular = false
-        @Published var isLoadingMoreTopRated = false
+    @Published var isLoadingMoreTopRated = false
+    
+    private var hasCheckedCache = false
 
     private let selectedMovieSubject = PassthroughSubject<MovieDomain, Never>()
     var selectedMoviePublisher: AnyPublisher<MovieDomain, Never> {
@@ -202,6 +204,28 @@ class HomeViewModel: ObservableObject {
         fetchNowPlaying(page: 1)
         fetchPopular(page: 1)
         fetchTopRated(page: 1)
+        
+        hasCheckedCache = true
+    }
+    
+    func refreshIfNeeded() {
+        guard hasCheckedCache else { return }
+        
+        // 마지막 데이터 업데이트 시간 확인
+        let currentTime = Date()
+        let cacheRefreshInterval: TimeInterval = 30 * 60 // 30분마다 새로고침
+        
+        // UserDefaults나 앱 내부 저장소에서 마지막 업데이트 시간 가져오기
+        let lastUpdateTime = UserDefaults.standard.object(forKey: "lastMovieDataUpdateTime") as? Date ?? Date(timeIntervalSince1970: 0)
+        
+        // 마지막 업데이트 후 지정된 시간이 지났는지 확인
+        if currentTime.timeIntervalSince(lastUpdateTime) > cacheRefreshInterval {
+            // 데이터를 백그라운드에서 새로고침
+            fetchInitialData()
+            
+            // 업데이트 시간 저장
+            UserDefaults.standard.set(currentTime, forKey: "lastMovieDataUpdateTime")
+        }
     }
 }
 

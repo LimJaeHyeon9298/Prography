@@ -67,6 +67,9 @@ struct HomeView: View {
         .onChange(of: coordinator.navigationPath.count) { oldValue, newValue in
             hideTabBar = newValue > 0
         }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+            viewModel.refreshIfNeeded()
+        }
     }
 }
 
