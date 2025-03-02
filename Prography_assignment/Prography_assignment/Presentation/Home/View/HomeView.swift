@@ -123,34 +123,42 @@ struct MovieListSection: View {
     let category: MovieCategory
     
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                if let movies = moviesForCategory(), !movies.isEmpty {
-                    // ID를 더 고유하게 만들기 위해 인덱스와 조합
-                    ForEach(Array(zip(movies.indices, movies)), id: \.0) { index, movie in
-                        MovieRowView(movie: movie, viewModel: viewModel)
-                            .frame(maxWidth: .infinity)
-                            .padding(.horizontal)
-                            // 고유한 ID 할당
-                            .id("\(category)-\(movie.id)-\(index)")
-                    }
+        LazyVStack(spacing: 16) {
+            if let movies = moviesForCategory(), !movies.isEmpty {
+                ForEach(Array(zip(movies.indices, movies)), id: \.0) { index, movie in
+                    MovieRowView(movie: movie, viewModel: viewModel)
+                        .frame(maxWidth: .infinity)
+                        .padding(.horizontal)
+                        .id("\(category)-\(movie.id)-\(index)")
                     
-                    ProgressView()
-                        .onAppear {
-                            loadNextPage()
-                        }
-                } else if isLoadingForCategory() {
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                } else {
-                    Text("데이터를 불러올 수 없습니다.")
-                        .frame(maxWidth: .infinity)
-                        .padding()
+                    // 마지막 아이템에 도달했을 때 다음 페이지 로드
+                    if index == movies.count - 3 && !isLoadingMoreForCategory() {
+                        ProgressView()
+                            .onAppear {
+                                loadNextPage()
+                            }
+                    }
                 }
+            } else if isLoadingForCategory() {
+                ProgressView()
+                    .frame(maxWidth: .infinity)
+                    .padding()
+            } else if errorForCategory() != nil {
+                VStack {
+                    Text("데이터를 불러올 수 없습니다.")
+                    Button("다시 시도") {
+                        retryForCategory()
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
+            } else {
+                Text("영화가 없습니다.")
+                    .frame(maxWidth: .infinity)
+                    .padding()
             }
-            .padding(.vertical)
         }
+        .padding(.vertical)
     }
     
     // 카테고리별 영화 데이터 가져오기
@@ -177,22 +185,44 @@ struct MovieListSection: View {
         }
     }
     
-    private func loadNextPage() {
+    // 카테고리별 추가 로딩 상태 확인
+    private func isLoadingMoreForCategory() -> Bool {
         switch category {
         case .nowPlaying:
-            if !viewModel.isLoadingMoreNowPlaying {
-                viewModel.fetchMovies(category: .nowPlaying, page: viewModel.nowPlayingCurrentPage)
-            }
+            return viewModel.isLoadingMoreNowPlaying
         case .popular:
-            if !viewModel.isLoadingMorePopular {
-                viewModel.fetchMovies(category: .popular, page: viewModel.popularCurrentPage)
-            }
+            return viewModel.isLoadingMorePopular
         case .topRated:
-            if !viewModel.isLoadingMoreTopRated {
-                viewModel.fetchMovies(category: .topRated, page: viewModel.topRatedCurrentPage)
-            }
+            return viewModel.isLoadingMoreTopRated
         }
     }
     
-    // 나머지 메서드들...
+    // 카테고리별 에러 확인
+    private func errorForCategory() -> NetworkError? {
+        switch category {
+        case .nowPlaying:
+            return viewModel.nowPlayingError
+        case .popular:
+            return viewModel.popularError
+        case .topRated:
+            return viewModel.topRatedError
+        }
+    }
+    
+    // 다시 시도 기능
+    private func retryForCategory() {
+        viewModel.fetchMovies(category: category, page: 1)
+    }
+    
+    // 다음 페이지 로드
+    private func loadNextPage() {
+        switch category {
+        case .nowPlaying:
+            viewModel.fetchMovies(category: .nowPlaying, page: viewModel.nowPlayingCurrentPage)
+        case .popular:
+            viewModel.fetchMovies(category: .popular, page: viewModel.popularCurrentPage)
+        case .topRated:
+            viewModel.fetchMovies(category: .topRated, page: viewModel.topRatedCurrentPage)
+        }
+    }
 }
