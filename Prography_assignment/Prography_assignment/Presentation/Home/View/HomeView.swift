@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-//
 
 struct HomeView: View {
     
@@ -39,9 +38,9 @@ struct HomeView: View {
                             .frame(height: 200)
                             .padding(.bottom, 30)
                         
-                        // Section with Sticky Header and Content
+                        
                         Section(header:
-                            MovieSectionsHeader(selectedTab: $selectedTab, tabs: tabs)
+                            MovieSectionsHeader(selectedTab: $selectedTab, tabs: tabs, viewModel: viewModel)
                                 .background(Color.white)
                                 
                         ) {
@@ -122,6 +121,9 @@ struct MovieListSection: View {
     @ObservedObject var viewModel: HomeViewModel
     let category: MovieCategory
     
+    // 현재 카테고리를 추적하는 ID 추가
+    private let categoryId = UUID()
+    
     var body: some View {
         LazyVStack(spacing: 16) {
             if let movies = moviesForCategory(), !movies.isEmpty {
@@ -129,9 +131,9 @@ struct MovieListSection: View {
                     MovieRowView(movie: movie, viewModel: viewModel)
                         .frame(maxWidth: .infinity)
                         .padding(.horizontal)
+                        // ID 생성 수정
                         .id("\(category)-\(movie.id)-\(index)")
                     
-                    // 마지막 아이템에 도달했을 때 다음 페이지 로드
                     if index == movies.count - 3 && !isLoadingMoreForCategory() {
                         ProgressView()
                             .onAppear {
@@ -143,22 +145,21 @@ struct MovieListSection: View {
                 ProgressView()
                     .frame(maxWidth: .infinity)
                     .padding()
-            } else if errorForCategory() != nil {
-                VStack {
-                    Text("데이터를 불러올 수 없습니다.")
-                    Button("다시 시도") {
-                        retryForCategory()
-                    }
-                    .buttonStyle(.bordered)
-                }
-                .padding()
             } else {
-                Text("영화가 없습니다.")
+                Text("데이터를 불러올 수 없습니다.")
                     .frame(maxWidth: .infinity)
                     .padding()
+                    .onAppear {
+                        // 데이터가 없으면 첫 페이지를 다시 로드
+                        if !isLoadingForCategory() {
+                            viewModel.fetchMovies(category: category, page: 1)
+                        }
+                    }
             }
         }
         .padding(.vertical)
+        // 고유 ID 부여로 탭 변경 시 뷰 완전히 리프레시
+        .id("\(category)-container-\(categoryId)")
     }
     
     // 카테고리별 영화 데이터 가져오기
@@ -172,7 +173,7 @@ struct MovieListSection: View {
             return viewModel.topRatedMovies?.movies
         }
     }
-    
+
     // 카테고리별 로딩 상태 확인
     private func isLoadingForCategory() -> Bool {
         switch category {
@@ -184,7 +185,7 @@ struct MovieListSection: View {
             return viewModel.isLoadingTopRated
         }
     }
-    
+
     // 카테고리별 추가 로딩 상태 확인
     private func isLoadingMoreForCategory() -> Bool {
         switch category {
@@ -196,7 +197,7 @@ struct MovieListSection: View {
             return viewModel.isLoadingMoreTopRated
         }
     }
-    
+
     // 카테고리별 에러 확인
     private func errorForCategory() -> NetworkError? {
         switch category {
@@ -208,12 +209,12 @@ struct MovieListSection: View {
             return viewModel.topRatedError
         }
     }
-    
+
     // 다시 시도 기능
     private func retryForCategory() {
         viewModel.fetchMovies(category: category, page: 1)
     }
-    
+
     // 다음 페이지 로드
     private func loadNextPage() {
         switch category {
@@ -225,4 +226,9 @@ struct MovieListSection: View {
             viewModel.fetchMovies(category: .topRated, page: viewModel.topRatedCurrentPage)
         }
     }
+
 }
+
+
+
+
