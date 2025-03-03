@@ -23,3 +23,7 @@ extension CoordinatorProtocol {
     }
 }
 
+
+protocol NavigationPopProtocol: ObservableObject {
+    var navigationPath: NavigationPath { get set }
+}

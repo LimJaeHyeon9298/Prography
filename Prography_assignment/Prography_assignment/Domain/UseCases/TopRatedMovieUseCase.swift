@@ -7,24 +7,24 @@
 
 import Combine
 
-protocol TopRatedMovieUseCaseImpl {
-    func execute(page:Int) -> AnyPublisher<TopRatedMovieListDomain, NetworkError>
-}
-
-class TopRatedMovieUseCase: TopRatedMovieUseCaseImpl {
-    private let repository: TopRatedMovieRepositoryProtocol
-    
-    init(repository: TopRatedMovieRepositoryProtocol) {
-        self.repository = repository
-    }
-    
-   
-    
-    func execute(page: Int) -> AnyPublisher<TopRatedMovieListDomain, NetworkError> {
-        return repository.fetchTopRated(page: page)
-            .mapError { $0 as NetworkError }
-            .eraseToAnyPublisher()
-    }
-    
-    
-}
+//protocol TopRatedMovieUseCaseImpl {
+//    func execute(page:Int) -> AnyPublisher<TopRatedMovieListDomain, NetworkError>
+//}
+//
+//class TopRatedMovieUseCase: TopRatedMovieUseCaseImpl {
+//    private let repository: TopRatedMovieRepositoryProtocol
+//    
+//    init(repository: TopRatedMovieRepositoryProtocol) {
+//        self.repository = repository
+//    }
+//    
+//   
+//    
+//    func execute(page: Int) -> AnyPublisher<TopRatedMovieListDomain, NetworkError> {
+//        return repository.fetchTopRated(page: page)
+//            .mapError { $0 as NetworkError }
+//            .eraseToAnyPublisher()
+//    }
+//    
+//    
+//}

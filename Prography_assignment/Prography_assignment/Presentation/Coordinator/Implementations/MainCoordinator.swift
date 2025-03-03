@@ -11,8 +11,8 @@ class MainCoordinator: ObservableObject {
     let homeCoordinator: HomeCoordinator
     let myPageCoordinator: MyPageCoordinator
     
-    init() {
-        self.homeCoordinator = HomeCoordinator()
-        self.myPageCoordinator = MyPageCoordinator()
+    init(homeCoordinator: HomeCoordinator, myPageCoordinator: MyPageCoordinator) {
+        self.homeCoordinator = homeCoordinator
+        self.myPageCoordinator = myPageCoordinator
     }
 }

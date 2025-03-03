@@ -7,8 +7,8 @@
 
 import SwiftUI
 
-enum HomeRoute {
-    case detail
+enum HomeRoute: Hashable {
+    case detail(MovieDomain)
     case search
     case filter
 }

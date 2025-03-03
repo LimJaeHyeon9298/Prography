@@ -10,25 +10,52 @@ import SwiftData
 
 @main
 struct Prography_assignmentApp: App {
-//    var sharedModelContainer: ModelContainer = {
-//        let schema = Schema([
-//            Item.self,
-//        ])
-//        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-//
-//        do {
-//            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-//        } catch {
-//            fatalError("Could not create ModelContainer: \(error)")
-//        }
-//    }()
+    @State var isSplashView = true
+    @State var showSplash = true
+    let container = DIContainer()
+    var sharedModelContainer: ModelContainer = {
+        let schema = Schema([
+            MovieReview.self,
+        ])
+        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+
+        do {
+            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }()
+    
+    init() {
+            DataManager.shared.setModelContext(sharedModelContainer.mainContext)
+        }
     
     @State private var selectedTab: TabItem = .home
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            if isSplashView {
+                LaunchScreenView()
+                    .ignoresSafeArea()
+                    .onAppear {
+                        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 3) {
+                            isSplashView = false
+                        }
+                    }
+            } else {
+                MainTabView(container: container)
+            }
+           
         }
-//        .modelContainer(sharedModelContainer)
+        .modelContainer(sharedModelContainer)
     }
+}
+
+struct LaunchScreenView: UIViewControllerRepresentable {
+    func makeUIViewController(context: Context) -> some UIViewController {
+        let controller = UIStoryboard(name: "Launch Screen", bundle: nil).instantiateInitialViewController()!
+        return controller
+    }
+    
+    func updateUIViewController(_ uiViewController: UIViewControllerType, context: Context) { }
 }

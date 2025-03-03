@@ -8,80 +8,79 @@
 import Foundation
 
 struct MovieMapper {
-    static func toDomain(dto:MovieDTO) -> MovieDomain? {
-        guard let releaseDate = DateFormatter.movieDate.date(from: dto.releaseDate) else {return nil}
+    static func toDomain(dto: MovieResponseDTO, type: MovieListType) -> MovieListDomain? {
+        let dateFormatter = DateFormatter.movieDate
         
-        return MovieDomain(id: dto.id,
-                           title: dto.title,
-                           overview: dto.overview,
-                           posterURL: dto.posterPath.flatMap {URL(string: "https://image.tmdb.org/t/p/w500/\($0)")},
-                           releaseDate: releaseDate,
-                           rating: dto.voteAverage)
+        // 날짜 매핑 (Now Playing의 경우에만)
+        let dateRange = type == .nowPlaying && dto.dates != nil ?
+            DateRange(
+                from: dateFormatter.date(from: dto.dates!.minimum)!,
+                to: dateFormatter.date(from: dto.dates!.maximum)!
+            ) :
+            nil
         
-    }
-    
-    static func toDomain(dto: MovieResponseDTO) -> MovieListDomain? {
-            let dateFormatter = DateFormatter.movieDate
-            
-            guard let fromDate = dateFormatter.date(from: dto.dates.minimum),
-                  let toDate = dateFormatter.date(from: dto.dates.maximum),
-                  let movies = dto.results.compactMap(toDomain) as [MovieDomain]? else {
-                return nil
-            }
-            
-            return MovieListDomain(
-                movies: movies,
-                currentPage: dto.page,
-                totalPages: dto.totalPages,
-                availableDateRange: DateRange(from: fromDate, to: toDate)
+        let movies = dto.results.compactMap { movieDTO -> MovieDomain in
+            MovieDomain(
+                id: movieDTO.id,
+                title: movieDTO.title,
+                originalTitle: movieDTO.originalTitle,
+                overview: movieDTO.overview,
+                posterPath: movieDTO.posterPath,
+                backdropPath: movieDTO.backdropPath,
+                releaseDate: dateFormatter.date(from: movieDTO.releaseDate),
+                rating: movieDTO.voteAverage,
+                voteCount: movieDTO.voteCount,
+                popularity: movieDTO.popularity,
+                genreIds: movieDTO.genreIds,
+                originalLanguage: movieDTO.originalLanguage,
+                adult: movieDTO.adult,
+                video: movieDTO.video
             )
         }
-}
-
-extension MovieMapper {
-    static func toDomain(dto: PopularMovieResponseDTO) -> PopularMovieListDomain? {
-        guard let movies = dto.results.compactMap(toDomain) as [MovieDomain]? else {
-            return nil
-        }
         
-        return PopularMovieListDomain(
+        return MovieListDomain(
             movies: movies,
             currentPage: dto.page,
-            totalPages: dto.totalPages
+            totalPages: dto.totalPages,
+            totalResults: dto.totalResults,
+            availableDateRange: dateRange
         )
     }
 }
 
 extension MovieMapper {
-    static func toDomain(dto: TopRatedMovieDTO) -> TopRatedMovieDomain? {
-        return TopRatedMovieDomain(
-            id: dto.id,
-            title: dto.title,
-            originalTitle: dto.originalTitle,
-            overview: dto.overview,
-            posterPath: dto.posterPath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500/\($0)") }?.absoluteString,
-            backdropPath: dto.backdropPath.flatMap { URL(string: "https://image.tmdb.org/t/p/w500/\($0)") }?.absoluteString,
-            releaseDate: dto.releaseDate,
-            voteAverage: dto.voteAverage,
-            voteCount: dto.voteCount,
-            popularity: dto.popularity,
-            genreIds: dto.genreIds,
-            originalLanguage: dto.originalLanguage,
-            adult: dto.adult,
-            video: dto.video
-        )
-    }
-    
-    static func toDomain(dto: TopRatedMovieResponseDTO) -> TopRatedMovieListDomain? {
-        guard let movies = dto.results.compactMap(toDomain) as [TopRatedMovieDomain]? else {
-            return nil
-        }
-        
-        return TopRatedMovieListDomain(
-            page: dto.page,
-            movies: movies,
-            totalPages: dto.totalPages,
-            totalResults: dto.totalResults
-        )
-    }
+    static func toDetailDomain(dto: MovieDetailDTO) -> MovieDetailDomain {
+           let dateFormatter = DateFormatter.movieDate
+           
+           return MovieDetailDomain(
+               id: dto.id,
+               title: dto.title,
+               originalTitle: dto.originalTitle,
+               overview: dto.overview,
+               posterPath: dto.posterPath,
+               backdropPath: dto.backdropPath,
+               releaseDate: dateFormatter.date(from: dto.releaseDate),
+               rating: dto.voteAverage,
+               voteCount: dto.voteCount,
+               runtime: dto.runtime,
+               status: dto.status,
+               tagline: dto.tagline,
+               popularity: dto.popularity,
+               genres: dto.genres.map { GenreDomain(id: $0.id, name: $0.name) },
+               productionCompanies: dto.productionCompanies.map {
+                   ProductionCompanyDomain(
+                       id: $0.id,
+                       name: $0.name,
+                       logoPath: $0.logoPath,
+                       originCountry: $0.originCountry
+                   )
+               },
+               productionCountries: dto.productionCountries.map {
+                   ProductionCountryDomain(
+                       iso3166_1: $0.iso3166_1,
+                       name: $0.name
+                   )
+               }
+           )
+       }
 }
