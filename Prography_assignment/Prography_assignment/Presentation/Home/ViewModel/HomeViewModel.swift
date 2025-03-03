@@ -29,7 +29,9 @@ class HomeViewModel: ObservableObject {
     
     @Published var isLoadingMoreNowPlaying = false
     @Published var isLoadingMorePopular = false
-        @Published var isLoadingMoreTopRated = false
+    @Published var isLoadingMoreTopRated = false
+    
+    private var hasCheckedCache = false
 
     private let selectedMovieSubject = PassthroughSubject<MovieDomain, Never>()
     var selectedMoviePublisher: AnyPublisher<MovieDomain, Never> {
@@ -67,15 +69,24 @@ class HomeViewModel: ObservableObject {
                }
                .store(in: &cancellables)
        }
+    
     private func fetchNowPlaying(page: Int) {
-        print("fetchNowPlaying 시작")
-        isLoadingNowPlaying = true
+        if page == 1 {
+            isLoadingNowPlaying = true
+        } else {
+            isLoadingMoreNowPlaying = true
+        }
         nowPlayingError = nil
         
         movieUseCase.execute(page: page, type: .nowPlaying)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
-                self?.isLoadingNowPlaying = false
+                if page == 1 {
+                    self?.isLoadingNowPlaying = false
+                } else {
+                    self?.isLoadingMoreNowPlaying = false
+                }
+                
                 switch completion {
                 case .failure(let error):
                     self?.nowPlayingError = error
@@ -86,46 +97,76 @@ class HomeViewModel: ObservableObject {
                 if page == 1 {
                     self?.nowPlayingMovies = movieList
                 } else {
+                    // 기존 영화 목록에 새 데이터 추가
                     self?.nowPlayingMovies?.movies.append(contentsOf: movieList.movies)
                 }
-                self?.nowPlayingCurrentPage = page + 1
+                
+                // 다음 페이지가 있는지 확인 (총 페이지 수 체크)
+                if page < movieList.totalPages {
+                    self?.nowPlayingCurrentPage = page + 1
+                }
             }
             .store(in: &cancellables)
     }
     
     private func fetchPopular(page: Int) {
-        print("fetchPopular 시작")
-         isLoadingPopular = true
-         popularError = nil
-         
+        if page == 1 {
+            isLoadingPopular = true
+        } else {
+            isLoadingMorePopular = true
+        }
+        popularError = nil
+        
         movieUseCase.execute(page: page, type: .popular)
-             .receive(on: DispatchQueue.main)
-             .sink { [weak self] completion in
-                 print("popular completion: \(completion)")
-                 self?.isLoadingPopular = false
-                 switch completion {
-                 case .failure(let error):
-                     self?.popularError = error
-                     print("popular error: \(error)")
-                 case .finished:
-                     break
-                 }
-             } receiveValue: { [weak self] movieList in
-                 print("popular 데이터 받음")
-                 if page == 1 {
-                     self?.popularMovies = movieList
-                 } else {
-                     self?.popularMovies?.movies.append(contentsOf: movieList.movies)
-                 }
-                 self?.popularCurrentPage = page + 1
-             }
-             .store(in: &cancellables)
-     }
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] completion in
+                if page == 1 {
+                    self?.isLoadingPopular = false
+                } else {
+                    self?.isLoadingMorePopular = false
+                }
+                
+                switch completion {
+                case .failure(let error):
+                    self?.popularError = error
+                    print("popular error: \(error)")
+                case .finished:
+                    break
+                }
+            } receiveValue: { [weak self] movieList in
+                print("popular 데이터 받음")
+                if page == 1 {
+                    self?.popularMovies = movieList
+                } else {
+                    // 기존 영화 목록에 새 데이터 추가
+                    self?.popularMovies?.movies.append(contentsOf: movieList.movies)
+                }
+                
+                // 다음 페이지가 있는지 확인
+                if page < movieList.totalPages {
+                    self?.popularCurrentPage = page + 1
+                }
+            }
+            .store(in: &cancellables)
+    }
     
     private func fetchTopRated(page: Int) {
+        if page == 1 {
+            isLoadingTopRated = true
+        } else {
+            isLoadingMoreTopRated = true
+        }
+        topRatedError = nil
+        
         movieUseCase.execute(page: page, type: .topRated)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] completion in
+                if page == 1 {
+                    self?.isLoadingTopRated = false
+                } else {
+                    self?.isLoadingMoreTopRated = false
+                }
+                
                 switch completion {
                 case .failure(let error):
                     self?.topRatedError = error
@@ -137,9 +178,14 @@ class HomeViewModel: ObservableObject {
                 if page == 1 {
                     self?.topRatedMovies = movieList
                 } else {
+                    // 기존 영화 목록에 새 데이터 추가
                     self?.topRatedMovies?.movies.append(contentsOf: movieList.movies)
                 }
-                self?.topRatedCurrentPage = page + 1
+                
+                // 다음 페이지가 있는지 확인
+                if page < movieList.totalPages {
+                    self?.topRatedCurrentPage = page + 1
+                }
             }
             .store(in: &cancellables)
     }
@@ -158,6 +204,28 @@ class HomeViewModel: ObservableObject {
         fetchNowPlaying(page: 1)
         fetchPopular(page: 1)
         fetchTopRated(page: 1)
+        
+        hasCheckedCache = true
+    }
+    
+    func refreshIfNeeded() {
+        guard hasCheckedCache else { return }
+        
+        // 마지막 데이터 업데이트 시간 확인
+        let currentTime = Date()
+        let cacheRefreshInterval: TimeInterval = 30 * 60 // 30분마다 새로고침
+        
+        // UserDefaults나 앱 내부 저장소에서 마지막 업데이트 시간 가져오기
+        let lastUpdateTime = UserDefaults.standard.object(forKey: "lastMovieDataUpdateTime") as? Date ?? Date(timeIntervalSince1970: 0)
+        
+        // 마지막 업데이트 후 지정된 시간이 지났는지 확인
+        if currentTime.timeIntervalSince(lastUpdateTime) > cacheRefreshInterval {
+            // 데이터를 백그라운드에서 새로고침
+            fetchInitialData()
+            
+            // 업데이트 시간 저장
+            UserDefaults.standard.set(currentTime, forKey: "lastMovieDataUpdateTime")
+        }
     }
 }
 

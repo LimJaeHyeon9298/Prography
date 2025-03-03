@@ -94,21 +94,20 @@ struct MovieCard: View {
     let recHeight: CGFloat = 200
     
     var body: some View {
-        ZStack(alignment: .bottomLeading) {  // alignment 변경
+        ZStack(alignment: .bottomLeading) {
             // 배경 이미지
-            AsyncImage(url: movie.posterURL) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: recWidth, height: recHeight)
-            } placeholder: {
+            CachedAsyncImage(
+                url: movie.posterURL,
+                targetSize: CGSize(width: recWidth, height: recHeight)
+            ) {
                 ZStack {
                     Color.gray.opacity(0.3)
                     ProgressView()
                         .progressViewStyle(CircularProgressViewStyle())
-                        .scaleEffect(0.7)  
+                        .scaleEffect(0.7)
                 }
             }
+            .frame(width: recWidth, height: recHeight)
             
             LinearGradient(
                 colors: [.black.opacity(0.7), .clear],

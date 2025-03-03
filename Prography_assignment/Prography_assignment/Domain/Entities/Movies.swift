@@ -72,36 +72,8 @@ struct MovieListDomain: Equatable {
     let availableDateRange: DateRange?
 }
 
-//struct MovieDomain: Equatable, Hashable {
-//    let id: Int
-//    let title: String
-//    let originalTitle: String?
-//    let overview: String
-//    let posterPath: String?
-//    let backdropPath: String?
-//    let releaseDate: Date?
-//    let rating: Double
-//    let voteCount: Int?
-//    let popularity: Double?
-//    let genreIds: [Int]
-//    let originalLanguage: String?
-//    let adult: Bool?
-//    let video: Bool?
-//    
-//    // Computed properties for convenience
-//    var posterURL: URL? {
-//        guard let posterPath = posterPath else { return nil }
-//        return URL(string: "https://image.tmdb.org/t/p/w500\(posterPath)")
-//    }
-//    
-//    // Genre mapping convenience method
-//    func getGenreNames() -> [String] {
-//        return genreIds.compactMap { genreId in
-//            MovieGenre(rawValue: genreId)?.name
-//        }
-//    }
-//}
-struct MovieDomain: Equatable, Hashable {
+
+struct MovieDomain: Equatable, Hashable,Identifiable {
     let id: Int
     let title: String
     let originalTitle: String?

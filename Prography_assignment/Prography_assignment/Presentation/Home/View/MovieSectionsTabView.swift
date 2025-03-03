@@ -11,6 +11,7 @@ struct MovieSectionsHeader: View {
     @Binding var selectedTab: Int
     let tabs: [String]
     @Namespace private var namespace
+    @ObservedObject var viewModel: HomeViewModel
     
     var body: some View {
         HStack(spacing: 0) {
@@ -33,8 +34,23 @@ struct MovieSectionsHeader: View {
                 }
                 .frame(maxWidth: .infinity)
                 .onTapGesture {
+                    let oldTab = selectedTab
                     withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                         selectedTab = index
+                    }
+                    
+                    // 탭이 변경되었고, 해당 카테고리의 데이터가 없거나 로딩 중인 경우 첫 페이지 로드
+                    if oldTab != index {
+                        let category: MovieCategory = index == 0 ? .nowPlaying :
+                                                    (index == 1 ? .popular : .topRated)
+                        
+                        let hasData = index == 0 ? viewModel.nowPlayingMovies != nil :
+                                     (index == 1 ? viewModel.popularMovies != nil :
+                                                  viewModel.topRatedMovies != nil)
+                        
+                        if !hasData {
+                            viewModel.fetchMovies(category: category, page: 1)
+                        }
                     }
                 }
             }
@@ -105,18 +121,31 @@ struct MovieRowView: View {
         }) {
             HStack(spacing: 16) {
                 // Poster Image
-                AsyncImage(url: movie.posterURL) { image in
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    Rectangle()
-                        .fill(Color.gray.opacity(0.3))
-                        .overlay(
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle())
-                        )
-                }
+//                AsyncImage(url: movie.posterURL) { image in
+//                    image
+//                        .resizable()
+//                        .aspectRatio(contentMode: .fill)
+//                } placeholder: {
+//                    Rectangle()
+//                        .fill(Color.gray.opacity(0.3))
+//                        .overlay(
+//                            ProgressView()
+//                                .progressViewStyle(CircularProgressViewStyle())
+//                        )
+//                }
+                
+                
+                CachedAsyncImage(
+                     url: movie.posterURL,
+                     targetSize: CGSize(width: 100, height: 150)
+                 ) {
+                     Rectangle()
+                         .fill(Color.gray.opacity(0.3))
+                         .overlay(
+                             ProgressView()
+                                 .progressViewStyle(CircularProgressViewStyle())
+                         )
+                 }
                 .frame(width: 100, height: 150)
                 .cornerRadius(8)
                 

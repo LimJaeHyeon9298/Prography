@@ -39,7 +39,6 @@ class DetailViewModel: ObservableObject {
     
     func deleteReview() {
         do {
-            // Use DataManager to delete the review for this specific movie
             try DataManager.shared.deleteReview(movieId: movieId)
             
             // Reset review-related properties
@@ -47,14 +46,11 @@ class DetailViewModel: ObservableObject {
             comment = ""
             userRating = 0
             
-            // Optionally, show a success message or perform additional UI updates
-            showingDeleteAlert = true  // Assuming you want to show an alert
+            
+            showingDeleteAlert = true
         } catch {
-            // Handle any errors that might occur during deletion
             print("Error deleting review: \(error.localizedDescription)")
-            // Optionally, show an error alert to the user
-            // errorMessage = "리뷰 삭제에 실패했습니다."
-            // showingErrorAlert = true
+
         }
     }
     
